@@ -6,7 +6,8 @@ import './index.css'
 function App() {
   return (
     <>
-      <h1 className='p-6 text-7xl'>La Cuponera</h1>
+       <h1 className='bg-surface text-ink p-6 text-1xl'>Mundo Cupones</h1>
+
     </>
   )
 }

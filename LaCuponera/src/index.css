@@ -1,1 +1,26 @@
 @import "tailwindcss";
+
+@import "tailwindcss";
+
+@theme {
+  /* Colores base */
+  --color-bg: #FFFFFF;
+  --color-surface: #F5F5F5;
+  --color-surface-2: #FEFAF1;
+  --color-border: #EDEDED;
+
+  /* Texto */
+  --color-ink: #363738;      /*  principal */
+  --color-muted: #7D8184;    /*  secundario */
+
+  /* Para botones / color rojo del logo */
+  --color-primary: #DB4444;        /* rojo principal */
+  --color-primary-hover: #E07575;  /* hover rojo */
+
+  /* Azul */
+  --color-secondary: #263238;      /* azul oscuro */
+  --color-secondary-hover: #A0BCE0;/* azul claro (hover) */
+
+  /* Estados extra */
+  --color-success: #00FF66;   /* verde */
+}
