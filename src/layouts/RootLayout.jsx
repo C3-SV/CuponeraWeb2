@@ -226,15 +226,15 @@ export default function RootLayout() {
                                 />
 
                                 <div>
-                                    <p className="text-base font-semibold">
+                                    <p className="text-md font-semibold">
                                         Mundo{" "}
                                         <span className="text-primary">
                                             Cupones
                                         </span>
                                     </p>
 
-                                    <p className="text-sm text-white/80">
-                                        Ahorra en tus marcas favoritas.
+                                    <p className="text-sm text-white">
+                                        Todo un mundo de ofertas a tu alcance
                                     </p>
                                 </div>
                             </div>
