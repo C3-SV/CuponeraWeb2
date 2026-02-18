@@ -4,14 +4,14 @@ import RootLayout from "../layouts/RootLayout";
 import NotFoundPage from "../pages/NotFoundPage";
 
 //! AQUI VAMOS A RECIBIR LAS RUTAS QUE CADA PAREJA VAYA HACIENDO 
-//import { offersRoutes } from "../features/offers/routes/offers.routes.jsx";
+import { offerRoutes } from "../features/offers/offer_routes.jsx";
 import { authRoutes } from "../features/auth/routes/auth_routes";
 //import { profileRoutes } from "../features/profile/routes/profile.routes.jsx";
 import { cartRoutes } from "../features/cart/routes/cart_routes";
 //import { couponsRoutes } from "../features/coupons/routes/coupons.routes.jsx";
 
 const appRoutes = [
-  //...offersRoutes,
+  ...offerRoutes,
   ...authRoutes,
   //...profileRoutes,
   ...cartRoutes,
