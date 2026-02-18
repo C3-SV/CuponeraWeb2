@@ -8,7 +8,7 @@ export const OrderSummary = () => {
         (acc, item) => acc + item.price * item.quantity,
         0,
     );
-    const serviceFee = 8.32; // Puedes hacerlo dinámico (ej: subtotal * 0.05)
+    const serviceFee = 8.32; // se puede hacer mas dinámico (ej: subtotal * 0.05)
     const total = subtotal + serviceFee;
 
     return (

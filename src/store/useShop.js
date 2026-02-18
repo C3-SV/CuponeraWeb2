@@ -5,7 +5,9 @@ export const useShopStore = create((set, get) => ({
     // Estado inicial
     products: MOCK_PRODUCTS,
     cart: [],
+    coupons: [],
 
+    // Acciones del carrito 
     addToCart: (product, quantity = 1) =>
         set((state) => {
             const existingItem = state.cart.find((item) => item.id === product.id);
@@ -34,4 +36,6 @@ export const useShopStore = create((set, get) => ({
         })),
 
     clearCart: () => set({ cart: [] }),
+
+    // Acciones de cupones
 }));
