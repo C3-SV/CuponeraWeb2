@@ -262,7 +262,7 @@ export default function RootLayout() {
                                 </li>
                                 <li>
                                     <NavLink
-                                        to="/ofertas"
+                                        to="/offers"
                                         className="hover:text-white transition"
                                     >
                                         Ofertas
@@ -278,10 +278,10 @@ export default function RootLayout() {
                                 </li>
                                 <li>
                                     <NavLink
-                                        to="/carrito"
+                                        to="/cart"
                                         className="hover:text-white transition"
                                     >
-                                        Carrito
+                                        Mi carrito
                                     </NavLink>
                                 </li>
                                 <li>
