@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { loginUser, logoutUser } from "../authService";
+import LoginForm from "../components/LoginForm"
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -27,6 +28,8 @@ export default function Login() {
 
   return (
     //aqui va el formulario de login
-    <div>login</div>
+   <div className="flex items-center justify-center min-h-[calc(100vh-160px)] bg-gray-100 px-4">
+      <LoginForm />
+    </div>
   );
 }

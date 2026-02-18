@@ -53,6 +53,9 @@ export default function RootLayout() {
                             Carrito
                         </NavLink>
                         <NavLink to="/login" className={linkDesktop}>
+                            Iniciar sesión
+                        </NavLink>
+                        <NavLink to="/register" className={linkDesktop}>
                             Crear cuenta
                         </NavLink>
                     </div>
@@ -154,11 +157,18 @@ export default function RootLayout() {
                                 Carrito
                             </NavLink>
                             <NavLink
-                                to="/login"
+                                to="/register"
                                 className={linkMobile}
                                 onClick={() => setMobileOpen(false)}
                             >
                                 Crear cuenta
+                            </NavLink>
+                            <NavLink
+                                to="/login"
+                                className={linkMobile}
+                                onClick={() => setMobileOpen(false)}
+                            >
+                                Iniciar sesión
                             </NavLink>
                         </div>
                     </div>
