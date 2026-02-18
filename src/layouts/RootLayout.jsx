@@ -58,7 +58,7 @@ export default function RootLayout() {
                         <NavLink to="/" className={linkDesktop}>
                             Inicio
                         </NavLink>
-                        <NavLink to="/ofertas" className={linkDesktop}>
+                        <NavLink to="/offers" className={linkDesktop}>
                             Ofertas
                         </NavLink>
                         <NavLink to="/mis-cupones" className={linkDesktop}>
@@ -172,7 +172,7 @@ export default function RootLayout() {
                                     </NavLink>
 
                                     <NavLink
-                                        to="/ofertas"
+                                        to="/offers"
                                         className={linkMobile}
                                         onClick={() => setMobileOpen(false)}
                                     >
