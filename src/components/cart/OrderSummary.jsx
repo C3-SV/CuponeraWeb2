@@ -2,7 +2,8 @@ import { useShopStore } from "../../store/useShop";
 
 export const OrderSummary = () => {
     const cart = useShopStore((state) => state.cart);
-
+    // para terminar compra 
+    const finalizePurchase = useShopStore((s) => s.finalizePurchase);
     // Cálculos dinámicos
     const subtotal = cart.reduce(
         (acc, item) => acc + item.price * item.quantity,
@@ -82,7 +83,8 @@ export const OrderSummary = () => {
 
             <div className="mt-6">
                 <button
-                    type="submit"
+                    type="button"
+                    onClick={() => finalizePurchase()}
                     className="w-full rounded-md border border-transparent bg-primary px-4 py-3 text-base font-medium text-white shadow-xs hover:bg-primary-hover focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-hidden transition"
                 >
                     Proceder al pago
