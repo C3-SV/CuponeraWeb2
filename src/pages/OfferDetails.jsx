@@ -44,38 +44,41 @@ export const OfferDetails = () => {
     };
 
     return (
-        <div className="bg-white">
-            <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:max-w-7xl lg:px-8">
-                <div className="lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-10">
-                    <OfferGalery
-                        images={offer.images || [offer.imageUrl]}
-                        title={offer.name}
-                    />
-
-                    <div className="mt-10 px-0 sm:mt-14 lg:mt-0">
-                        <OfferInfo
-                            title={displayOffer.title}
-                            price={displayOffer.price}
-                            oldPrice={displayOffer.oldPrice}
-                            stock={displayOffer.stock}
-                            description={displayOffer.description}
+        <>
+            <title>{offer.name}</title>
+            <div className="bg-white">
+                <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:max-w-7xl lg:px-8">
+                    <div className="lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-10">
+                        <OfferGalery
+                            images={offer.images || [offer.imageUrl]}
+                            title={offer.name}
                         />
 
-                        <CartForm
-                            stock={displayOffer.stock}
-                            categoryName={displayOffer.categoryName}
-                            onAddToCart={(qty) => addToCart(offer, qty)}
-                        />
+                        <div className="mt-10 px-0 sm:mt-14 lg:mt-0">
+                            <OfferInfo
+                                title={displayOffer.title}
+                                price={displayOffer.price}
+                                oldPrice={displayOffer.oldPrice}
+                                stock={displayOffer.stock}
+                                description={displayOffer.description}
+                            />
 
-                        <OfferDetailsTable details={offer.details || []} />
+                            <CartForm
+                                stock={displayOffer.stock}
+                                categoryName={displayOffer.categoryName}
+                                onAddToCart={(qty) => addToCart(offer, qty)}
+                            />
+
+                            <OfferDetailsTable details={offer.details || []} />
+                        </div>
                     </div>
-                </div>
 
-                <RelatedOffers
-                    offers={relatedOffers}
-                    onAddToCart={(p) => addToCart(p, 1)}
-                />
+                    <RelatedOffers
+                        offers={relatedOffers}
+                        onAddToCart={(p) => addToCart(p, 1)}
+                    />
+                </div>
             </div>
-        </div>
+        </>
     );
 };

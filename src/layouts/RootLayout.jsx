@@ -68,7 +68,7 @@ export default function RootLayout() {
 
                     <div className="flex items-center gap-4">
                         <NavLink
-                            to="/carrito"
+                            to="/cart"
                             className={(props) =>
                                 linkDesktop(props) +
                                 " hover:scale-110 transition duration-300"
@@ -188,7 +188,7 @@ export default function RootLayout() {
                                     </NavLink>
 
                                     <NavLink
-                                        to="/carrito"
+                                        to="/cart"
                                         className={linkMobile}
                                         onClick={() => setMobileOpen(false)}
                                     >
