@@ -58,7 +58,7 @@ export default function RootLayout() {
                         <NavLink to="/" className={linkDesktop}>
                             Inicio
                         </NavLink>
-                        <NavLink to="/ofertas" className={linkDesktop}>
+                        <NavLink to="/offers" className={linkDesktop}>
                             Ofertas
                         </NavLink>
                         <NavLink to="/mis-cupones" className={linkDesktop}>
@@ -68,7 +68,7 @@ export default function RootLayout() {
 
                     <div className="flex items-center gap-4">
                         <NavLink
-                            to="/carrito"
+                            to="/cart"
                             className={(props) =>
                                 linkDesktop(props) +
                                 " hover:scale-110 transition duration-300"
@@ -172,7 +172,7 @@ export default function RootLayout() {
                                     </NavLink>
 
                                     <NavLink
-                                        to="/ofertas"
+                                        to="/offers"
                                         className={linkMobile}
                                         onClick={() => setMobileOpen(false)}
                                     >
@@ -188,7 +188,7 @@ export default function RootLayout() {
                                     </NavLink>
 
                                     <NavLink
-                                        to="/carrito"
+                                        to="/cart"
                                         className={linkMobile}
                                         onClick={() => setMobileOpen(false)}
                                     >
@@ -262,7 +262,7 @@ export default function RootLayout() {
                                 </li>
                                 <li>
                                     <NavLink
-                                        to="/ofertas"
+                                        to="/offers"
                                         className="hover:text-white transition"
                                     >
                                         Ofertas
@@ -278,10 +278,10 @@ export default function RootLayout() {
                                 </li>
                                 <li>
                                     <NavLink
-                                        to="/carrito"
+                                        to="/cart"
                                         className="hover:text-white transition"
                                     >
-                                        Carrito
+                                        Mi carrito
                                     </NavLink>
                                 </li>
                                 <li>
