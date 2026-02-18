@@ -2,6 +2,7 @@ import React from "react";
 import { createBrowserRouter } from "react-router-dom";
 import RootLayout from "../layouts/RootLayout";
 import NotFoundPage from "../pages/NotFoundPage";
+import { Index } from "../pages/Index";
 
 //! AQUI VAMOS A RECIBIR LAS RUTAS QUE CADA PAREJA VAYA HACIENDO
 import { offerRoutes } from "../features/offers/offer_routes.jsx";
@@ -22,6 +23,10 @@ export const router = createBrowserRouter([
     {
         path: "/",
         element: <RootLayout />,
-        children: [...appRoutes, { path: "*", element: <NotFoundPage /> }],
+        children: [
+            { index: true, element: <Index /> },
+            ...appRoutes,
+            { path: "*", element: <NotFoundPage /> },
+        ],
     },
 ]);
