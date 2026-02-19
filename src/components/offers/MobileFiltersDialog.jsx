@@ -1,7 +1,7 @@
 import React from "react";
 import { FilterSection } from "./FilterSection";
 
-export const MobileFiltersDialog = ({ sections }) => {
+export const MobileFiltersDialog = ({ open, setOpen, children }) => {
     return (
         <el-dialog>
             <dialog
@@ -27,7 +27,6 @@ export const MobileFiltersDialog = ({ sections }) => {
                                 className="relative -mr-2 flex size-10 items-center justify-center rounded-md bg-white p-2 text-gray-400 hover:bg-gray-50 focus:ring-2 focus:ring-secondary-hover focus:outline-hidden"
                             >
                                 <span className="absolute -inset-0.5" />
-
                                 <svg
                                     viewBox="0 0 24 24"
                                     fill="none"
@@ -46,15 +45,9 @@ export const MobileFiltersDialog = ({ sections }) => {
                             </button>
                         </div>
 
-                        <form className="mt-4 border-t border-gray-200">
-                            {sections.map((s) => (
-                                <FilterSection
-                                    key={s.id}
-                                    title={s.name}
-                                    options={s.options}
-                                />
-                            ))}
-                        </form>
+                        <div className="mt-4 border-t border-gray-200">
+                            {children}
+                        </div>
                     </el-dialog-panel>
                 </div>
             </dialog>

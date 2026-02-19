@@ -5,6 +5,19 @@ export const useShopStore = create((set, get) => ({
     // Estado inicial
     products: MOCK_PRODUCTS,
     cart: [],
+    selectedCategory: null,
+
+    setCategory: (category) =>
+        set({ selectedCategory: category }),
+
+    getProductsByCategory: () => {
+        const { products, selectedCategory } = get();
+        if (!selectedCategory) return products;
+
+        return products.filter(
+            (product) => product.category === selectedCategory
+        );
+    },
 
     addToCart: (product, quantity = 1) =>
         set((state) => {
