@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
+import { useAuthStore } from "../store/authStore";
 
 const linkDesktop = ({ isActive }) =>
     `text-sm transition ${
@@ -17,6 +18,7 @@ const linkMobile = ({ isActive }) =>
 
 export default function RootLayout() {
     const [mobileOpen, setMobileOpen] = useState(false);
+    const session = useAuthStore((s) => s.session);
     const [showScrollTop, setShowScrollTop] = useState(false); // Estado para el botón
 
     // Cerrar con ESC
@@ -104,9 +106,15 @@ export default function RootLayout() {
                                 <path d="M6 2a1 1 0 0 1 .993 .883l.007 .117v1.068l13.071 .935a1 1 0 0 1 .929 1.024l-.01 .114l-1 7a1 1 0 0 1 -.877 .853l-.113 .006h-12v2h10a3 3 0 1 1 -2.995 3.176l-.005 -.176l.005 -.176c.017 -.288 .074 -.564 .166 -.824h-5.342a3 3 0 1 1 -5.824 1.176l-.005 -.176l.005 -.176a3.002 3.002 0 0 1 1.995 -2.654v-12.17h-1a1 1 0 0 1 -.993 -.883l-.007 -.117a1 1 0 0 1 .883 -.993l.117 -.007h2zm0 16a1 1 0 1 0 0 2a1 1 0 0 0 0 -2zm11 0a1 1 0 1 0 0 2a1 1 0 0 0 0 -2z" />
                             </svg>
                         </NavLink>
-                        <NavLink to="/login" className={linkDesktop}>
-                            Crear cuenta
-                        </NavLink>
+                        {session ? (
+                            <NavLink to="/profile" className={linkDesktop}>
+                                Mi perfil
+                            </NavLink>
+                        ) : (
+                            <NavLink to="/login" className={linkDesktop}>
+                                Iniciar sesión
+                            </NavLink>
+                        )}
                     </div>
                 </nav>
             </header>
@@ -201,13 +209,24 @@ export default function RootLayout() {
                                     >
                                         Mi carrito
                                     </NavLink>
-                                    <NavLink
-                                        to="/login"
-                                        className={linkMobile}
-                                        onClick={() => setMobileOpen(false)}
-                                    >
-                                        Crear cuenta
-                                    </NavLink>
+
+                                    {session ? (
+                                        <NavLink
+                                            to="/profile"
+                                            className={linkMobile}
+                                            onClick={() => setMobileOpen(false)}
+                                        >
+                                            Mi perfil
+                                        </NavLink>
+                                    ) : (
+                                        <NavLink
+                                            to="/login"
+                                            className={linkMobile}
+                                            onClick={() => setMobileOpen(false)}
+                                        >
+                                            Iniciar sesión
+                                        </NavLink>
+                                    )}
                                 </nav>
                             </div>
                         </div>
@@ -281,7 +300,7 @@ export default function RootLayout() {
                                 </li>
                                 <li>
                                     <NavLink
-                                        to="/ofertas"
+                                        to="/offers"
                                         className="hover:text-white transition"
                                     >
                                         Ofertas
@@ -297,10 +316,10 @@ export default function RootLayout() {
                                 </li>
                                 <li>
                                     <NavLink
-                                        to="/carrito"
+                                        to="/cart"
                                         className="hover:text-white transition"
                                     >
-                                        Carrito
+                                        Mi carrito
                                     </NavLink>
                                 </li>
                                 <li>
