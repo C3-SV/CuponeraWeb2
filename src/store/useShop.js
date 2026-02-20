@@ -18,7 +18,7 @@ const computeStatus = ({ validUntil, redeemedAt }) => {
 
 export const useShopStore = create((set, get) => ({
     // Estado inicial
-    products: MOCK_PRODUCTS,
+    products: [],
     cart: [],
     coupons: [],
     selectedCategory: null,
@@ -64,6 +64,7 @@ export const useShopStore = create((set, get) => ({
         image_url,
         image_alt_text,
         image_sort_order,
+        main_image,
         deleted_at
       ),
 
@@ -76,10 +77,10 @@ export const useShopStore = create((set, get) => ({
       )
     `)
             .is("deleted_at", null)
-            //.eq("offer_status", "APPROVED")
-            .order("created_at", { ascending: false })
-            //.order("image_sort_order", { foreignTable: "offer_carousel_images", ascending: true })
-            //.order("item_sort_order", { foreignTable: "offer_list_details", ascending: true });
+            .order("created_at", { ascending: false });
+
+        //.order("image_sort_order", { foreignTable: "offer_carousel_images", ascending: true })
+        //.order("item_sort_order", { foreignTable: "offer_list_details", ascending: true });
 
         if (error) {
             console.error("loadOffers:", error);
@@ -87,17 +88,30 @@ export const useShopStore = create((set, get) => ({
             return;
         }
 
+        const PRODUCT_IMAGES_BUCKET = "product-images";
+
+        const toStorageUrl = (url, bucket) => {
+            if (!url) return null;
+            if (/^https?:\/\//i.test(url)) return url;
+
+            const { data } = supabase.storage.from(bucket).getPublicUrl(url);
+            return data?.publicUrl ?? null;
+        };
+
         // mapeo al componente 
         const mapped = (data ?? []).map((row) => {
-            const images = (row.offer_carousel_images ?? [])
-                .filter((img) => !img.deleted_at)
-                .sort((a, b) => (a.image_sort_order ?? 1) - (b.image_sort_order ?? 1))
-                .map((img) => ({
-                    id: img.offer_carousel_image_id,
-                    url: img.image_url,
-                    alt: img.image_alt_text ?? "",
-                    order: img.image_sort_order ?? 1,
-                }));
+            const images = (row.offer_carousel_images ?? []).map((img) => ({
+                id: img.offer_carousel_image_id,
+                url: toStorageUrl(img.image_url, PRODUCT_IMAGES_BUCKET),
+                alt: img.image_alt_text,
+                isMain: img.main_image,
+                sortOrder: img.image_sort_order,
+            }));
+
+            const mainImage =
+                images.find((img) => img.isMain)?.url
+                ?? images[0]?.url
+                ?? null;
 
             const rowDetails = (row.offer_list_details ?? [])
                 .filter((d) => !d.deleted_at)
@@ -112,13 +126,12 @@ export const useShopStore = create((set, get) => ({
             const categoryData = row.company?.category_id
                 ? {
                     name: row.company.category_id.category_name,
-                    image: row.company.category_id.category_image,
                 }
                 : null;
 
-            const details = [...rowDetails, ...(categoryData ? [{categoryName: categoryData.name}] : [])];
-            
-        
+            const details = [...rowDetails, ...(categoryData ? [{ categoryName: categoryData.name }] : [])];
+
+
             const businessName =
                 row.company?.deleted_at ? "—" : (row.company?.company_name ?? "—");
 
@@ -135,7 +148,7 @@ export const useShopStore = create((set, get) => ({
 
                 startDate: row.offer_start_date,
                 endDate: row.offer_end_date,
-                validUntil,           
+                validUntil,
                 expiresAt: validUntil,
 
                 stock: Number(row.coupon_quantity_limit ?? 0),
@@ -146,8 +159,8 @@ export const useShopStore = create((set, get) => ({
                 companyPhoto: row.company?.company_photo ?? null,
 
                 images,
-                imageUrl: images[0]?.url ?? null,
-                details,                          
+                mainImage: mainImage,
+                details,
             };
         });
 
