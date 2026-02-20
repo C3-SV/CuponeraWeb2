@@ -67,7 +67,7 @@ export const CartForm = ({ stock, categoryName, onAddToCart }) => {
 
                 <button
                     type="submit"
-                    className="flex-1 rounded-md bg-primary px-6 text-sm font-semibold text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 whitespace-nowrap py-3"
+                    className="flex-1 rounded-md bg-primary px-6 text-sm font-medium text-white font-heading hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 whitespace-nowrap py-3"
                 >
                     Añadir al carrito
                 </button>

@@ -26,7 +26,12 @@ export const OfferCard = ({ product, onAddToCart }) => {
 
                     {/* Cart */}
                     <button
-                        onClick={() => onAddToCart?.(product)}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+
+                            onAddToCart?.(product);
+                        }}
                         className="absolute right-2 top-2 grid size-8 place-items-center rounded-full bg-white shadow ring-1 ring-black/5 hover:scale-110 transition"
                     >
                         <svg
