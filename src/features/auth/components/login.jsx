@@ -58,9 +58,18 @@ export default function Login() {
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          <Button type="submit" variant="primary" className="w-full">
-            Iniciar sesión
-          </Button>
+          <div className="flex items-center justify-between gap-2 text-sm">
+            <Button type="submit" variant="primary">
+              Iniciar sesión
+            </Button>
+
+            <p className="text-sm whitespace-nowrap">
+              ¿Aún no tienes cuenta?{" "}
+              <a href="/register" className="text-blue-500 hover:underline">
+                Regístrate aquí
+              </a>
+            </p>
+          </div>
 
           {msg && (
             <p className={`text-sm text-center mt-3 ${msg === "Login exitoso" ? "text-green-600" : "text-red-500"

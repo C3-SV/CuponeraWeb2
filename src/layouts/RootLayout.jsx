@@ -83,7 +83,7 @@ export default function RootLayout() {
                             </svg>
                         </NavLink>
                         <NavLink to="/login" className={linkDesktop}>
-                            Crear cuenta
+                            Iniciar sesión
                         </NavLink>
                     </div>
                 </nav>
@@ -200,7 +200,7 @@ export default function RootLayout() {
                                         className={linkMobile}
                                         onClick={() => setMobileOpen(false)}
                                     >
-                                        Crear cuenta
+                                        Iniciar sesión
                                     </NavLink>
                                 </nav>
                             </div>
