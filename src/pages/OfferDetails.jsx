@@ -12,7 +12,7 @@ import { useParams } from "react-router-dom";
 export const OfferDetails = () => {
     const { id } = useParams();
 
-    // ✅ Usamos Zustand para obtener datos y la acción
+    // Usamos Zustand para obtener datos y la acción
     const products = useShopStore((state) => state.products);
     const addToCart = useShopStore((state) => state.addToCart);
 
@@ -29,7 +29,7 @@ export const OfferDetails = () => {
     const displayOffer = {
         ...offer,
         title: offer.name,
-        categoryName: offer.category.toUpperCase(),
+        categoryName: offer.categoryName?.toUpperCase(),
     };
 
     // ====== HANDLERS ======

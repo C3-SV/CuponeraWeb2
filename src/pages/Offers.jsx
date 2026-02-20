@@ -4,6 +4,7 @@ import { MobileFiltersDialog } from "../components/offers/MobileFiltersDialog";
 import { OfferGrid } from "../components/offers/OfferGrid";
 import { FiltersLayout } from "../components/offers/FiltersLayout";
 import { useShopStore } from "../store/useShop";
+import { useEffect } from "react";
 
 export const Offers = ({ title }) => {
     const [priceRange, setPriceRange] = useState({ min: 0, max: 1000 });
@@ -15,7 +16,12 @@ export const Offers = ({ title }) => {
     ];
 
     const products = useShopStore((state) => state.products);
+    const loadOffers = useShopStore((s) => s.loadOffers);
     const addToCart = useShopStore((state) => state.addToCart);
+
+    useEffect(() => {
+        loadOffers();
+    }, [loadOffers]);
 
     // Objeto de props compartido para no repetir código
     const filterProps = {
@@ -45,7 +51,7 @@ export const Offers = ({ title }) => {
                 <OfferCatalogHeader
                     title="Nuevas Ofertas"
                     sortOptions={sortOptions}
-                    onSortSelect={() => {}}
+                    onSortSelect={() => { }}
                 />
                 <section className="pt-6 pb-24">
                     <div className="grid grid-cols-1 gap-8 lg:grid-cols-[260px_1fr]">
