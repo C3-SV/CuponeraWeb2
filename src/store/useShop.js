@@ -19,7 +19,19 @@ export const useShopStore = create((set, get) => ({
     // Estado inicial
     products: MOCK_PRODUCTS,
     cart: [],
-    coupons: [],
+    selectedCategory: null,
+
+    setCategory: (category) =>
+        set({ selectedCategory: category }),
+
+    getProductsByCategory: () => {
+        const { products, selectedCategory } = get();
+        if (!selectedCategory) return products;
+
+        return products.filter(
+            (product) => product.category === selectedCategory
+        );
+    },
 
     // Acciones del carrito 
     addToCart: (product, quantity = 1) =>
