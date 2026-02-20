@@ -1,13 +1,17 @@
 import { supabase } from "../../lib/supabaseClient";
 
-/* REGISTRO */
-export const registerUser = async (email, password) => {
+// registro
+export const registerUser = async (email, password, name, lastname, phone, dui, address) => {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: {
         name: name,
+        lastname: lastname,
+        phone: phone,
+        dui: dui,
+        address: address,
       },
     },
   });
@@ -16,7 +20,7 @@ export const registerUser = async (email, password) => {
   return data;
 };
 
-/* LOGIN */
+//login
 export const loginUser = async (email, password) => {
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -27,7 +31,7 @@ export const loginUser = async (email, password) => {
   return data;
 };
 
-/* LOGOUT */
+//logout
 export const logoutUser = async () => {
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
