@@ -58,18 +58,25 @@ export default function Login() {
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          <div className="flex items-center justify-between gap-2 text-sm">
-            <Button type="submit" variant="primary">
+          <div>
+            <Button type="submit" variant="primary" className="w-full">
               Iniciar sesión
             </Button>
-
-            <p className="text-sm whitespace-nowrap">
-              ¿Aún no tienes cuenta?{" "}
-              <a href="/register" className="text-blue-500 hover:underline">
-                Regístrate aquí
-              </a>
-            </p>
           </div>
+
+          <p className="text-center text-sm">
+            ¿Aún no tienes cuenta?{" "}
+            <a href="/register" className="text-blue-500 hover:underline">
+              Regístrate aquí
+            </a>
+          </p>
+
+          <p className="text-center text-sm">
+            ¿Haz olvidado tu contraseña?{" "}
+            <a href="" className="text-blue-500 hover:underline"> //link del form de contra
+              Recuperarla aquí
+            </a>
+          </p>
 
           {msg && (
             <p className={`text-sm text-center mt-3 ${msg === "Login exitoso" ? "text-green-600" : "text-red-500"
