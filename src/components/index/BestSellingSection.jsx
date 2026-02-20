@@ -29,7 +29,7 @@ export const BestSellingSection = ({ offers, onAddToCart }) => {
                     </div>
 
                     {/* Botón Ver Todos (Reemplaza a las flechas) */}
-                    <div class="mx-auto md:mx-0">
+                    <div className="mx-auto md:mx-0">
                         <Link
                             to="/offers"
                             className="inline-flex items-center justify-center rounded-md bg-primary px-8 py-3 text-sm font-medium text-white shadow-sm hover:bg-primary-hover transition-transform hover:scale-105 font-heading"

@@ -1,38 +1,37 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useShopStore } from "../../store/useShop";
 
-export const OfferCard = ({ product, onAddToCart }) => {
-    const { id, name, images, price, oldPrice, discountPercent } = product;
+export const OfferCard = ({ product }) => {
+    const addToCart = useShopStore((state) => state.addToCart);
 
-    const hasDiscount = oldPrice && oldPrice > price;
+    const { id, name, mainImage, price, regularPrice, discountPercent } =
+        product;
+    const hasDiscount = regularPrice && regularPrice > price;
 
     const badge =
         discountPercent ??
         (hasDiscount
-            ? Math.round(((oldPrice - price) / oldPrice) * 100)
+            ? Math.round(((regularPrice - price) / regularPrice) * 100)
             : null);
 
     return (
-        <article className="rounded-xl bg-white p-4 shadow-sm hover:shadow-md transition flex flex-col">
+        <article className="rounded-xl bg-white shadow-sm hover:shadow-md transition flex flex-col overflow-hidden">
             <Link to={`/offer/${id}`} className="contents">
-                {/* Image area (taller) */}
-                <div className="relative flex items-center justify-center h-36 bg-surface rounded-lg mb-3">
-                    {/* Badge */}
+                <div className="relative h-40 w-full bg-gray-100">
                     {badge && (
-                        <span className="absolute left-2 top-2 rounded bg-red-500 px-2 py-0.5 text-xs font-semibold text-white">
+                        <span className="absolute left-3 top-3 rounded bg-red-500 px-2 py-0.5 text-xs font-semibold text-white z-10">
                             -{badge}%
                         </span>
                     )}
 
-                    {/* Cart */}
                     <button
                         onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-
-                            onAddToCart?.(product);
+                            addToCart(product, 1);
                         }}
-                        className="absolute right-2 top-2 grid size-8 place-items-center rounded-full bg-white shadow ring-1 ring-black/5 hover:scale-110 transition"
+                        className="absolute right-3 top-3 grid size-8 place-items-center rounded-full bg-white shadow ring-1 ring-black/5 hover:scale-110 transition z-10"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -43,16 +42,14 @@ export const OfferCard = ({ product, onAddToCart }) => {
                         </svg>
                     </button>
 
-                    {/* Image */}
                     <img
-                        src={images[0]}
+                        src={mainImage}
                         alt={name}
-                        className="h-24 object-contain"
+                        className="w-full h-full object-cover"
                     />
                 </div>
 
-                {/* Text area grows */}
-                <div className="flex flex-col flex-1 justify-between space-y-2">
+                <div className="flex flex-col flex-1 justify-between p-4 space-y-3">
                     <h3 className="text-sm font-medium text-ink line-clamp-2 min-h-10">
                         {name}
                     </h3>
@@ -64,7 +61,7 @@ export const OfferCard = ({ product, onAddToCart }) => {
 
                         {hasDiscount && (
                             <span className="text-xs text-muted line-through">
-                                ${oldPrice}
+                                ${regularPrice}
                             </span>
                         )}
                     </div>

@@ -15,9 +15,8 @@ export const Offers = ({ title }) => {
         { label: "Hogar", value: "home", checked: true },
     ];
 
-    const products = useShopStore((state) => state.products);
     const loadOffers = useShopStore((s) => s.loadOffers);
-    const addToCart = useShopStore((state) => state.addToCart);
+    const products = useShopStore((state) => state.products);
 
     useEffect(() => {
         loadOffers();
@@ -42,31 +41,31 @@ export const Offers = ({ title }) => {
     ];
 
     return (
-        <div className="bg-white">
-            <MobileFiltersDialog>
-                <FiltersLayout {...filterProps} />
-            </MobileFiltersDialog>
+        <>
+            <title>{title}</title>
+            <div className="bg-white">
+                <MobileFiltersDialog>
+                    <FiltersLayout {...filterProps} />
+                </MobileFiltersDialog>
 
-            <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <OfferCatalogHeader
-                    title="Nuevas Ofertas"
-                    sortOptions={sortOptions}
-                    onSortSelect={() => { }}
-                />
-                <section className="pt-6 pb-24">
-                    <div className="grid grid-cols-1 gap-8 lg:grid-cols-[260px_1fr]">
-                        <aside className="hidden lg:block">
-                            <FiltersLayout {...filterProps} />
-                        </aside>
-                        <section>
-                            <OfferGrid
-                                products={products}
-                                onAddToCart={(p) => addToCart(p, 1)}
-                            />
-                        </section>
-                    </div>
-                </section>
-            </main>
-        </div>
+                <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <OfferCatalogHeader
+                        title="Nuevas Ofertas"
+                        sortOptions={sortOptions}
+                        onSortSelect={() => {}}
+                    />
+                    <section className="pt-6 pb-24">
+                        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[260px_1fr]">
+                            <aside className="hidden lg:block">
+                                <FiltersLayout {...filterProps} />
+                            </aside>
+                            <section>
+                                <OfferGrid products={products} />
+                            </section>
+                        </div>
+                    </section>
+                </main>
+            </div>
+        </>
     );
 };
