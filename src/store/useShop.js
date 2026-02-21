@@ -5,6 +5,15 @@ import Swal from "sweetalert2";
 
 const toISO = (d) => new Date(d).toISOString();
 
+const todayDateSupabaseFormat = () => {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+};
+
+
 const codePrefix3 = (name = "LCP") => {
     const letters = (name.toUpperCase().match(/[A-Z]/g) || []).join("");
     return (letters + "XXX").slice(0, 3);
@@ -308,7 +317,6 @@ export const useShopStore = create((set, get) => ({
             const validFrom = meta.validFrom ?? purchaseDate;
 
             // validUntil:
-            // 2) si no, lo ponemos a +30 días (placeholder)
             const buildValidUntil = (item) => {
                 const fromItem =
                     item.validUntil || item.expiresAt || item.expirationDate || null;
@@ -378,7 +386,7 @@ export const useShopStore = create((set, get) => ({
                 },
             ])
             .select("order_id")
-            .single();
+            .maybeSingle();
 
         if (orderErr) throw orderErr;
 
@@ -535,4 +543,82 @@ export const useShopStore = create((set, get) => ({
 
     // limpiar cupones  
     clearCoupons: () => set({ coupons: [] }),
+
+    // Logica para validacion y canjeo de cupones 
+    fetchCouponForRedeem: async (couponCode) => {
+        const code = String(couponCode || "").trim();
+        if (!code) throw new Error("Código inválido.");
+
+        // con login 
+        const { data: authData, error: authErr } = await supabase.auth.getUser();
+        const user = authData?.user;
+        if (authErr || !user) throw new Error("Debés iniciar sesión para canjear."); 
+
+        // Traer info del cupón + oferta/negocio + order customer (para validar)
+        const { data, error } = await supabase
+            .from("coupons")
+            .select(`
+      coupon_id, coupon_code, coupon_status, coupon_expires_at, coupon_redeemed_at, coupon_redeemed_by,
+      order_items (
+        order_item_id,
+        offers ( offer_id, offer_title, companies ( company_id, company_name ) ),
+        orders ( order_id, customer_id )
+      )
+    `)
+            .eq("coupon_code", code)
+            .maybeSingle();
+
+        if (error) throw error;
+
+        const expires = data.coupon_expires_at; 
+        const today = todayDateSupabaseFormat();
+
+        const isExpired = expires && expires < today;
+        const isRedeemed = data.coupon_status === "REDEEMED";
+
+        // validación
+        const ownerId = data.order_items?.orders?.customer_id;
+        if (ownerId && ownerId !== user.id) throw new Error("No autorizado para canjear este cupón.");
+
+        return {
+            coupon_id: data.coupon_id,
+            coupon_code: data.coupon_code,
+            coupon_status: data.coupon_status,
+            coupon_expires_at: data.coupon_expires_at,
+            coupon_redeemed_at: data.coupon_redeemed_at,
+            offerName: data.order_items?.offers?.offer_title ?? "Cupón",
+            businessName: data.order_items?.offers?.companies?.company_name ?? "—",
+            isExpired,
+            isRedeemed,
+        };
+    },
+
+    redeemCouponByCode: async (couponCode) => {
+        const code = String(couponCode || "").trim();
+        if (!code) throw new Error("Código inválido.");
+
+        const { data: authData, error: authErr } = await supabase.auth.getUser();
+        const user = authData?.user;
+        if (authErr || !user) throw new Error("Debés iniciar sesión para canjear.");
+
+        const today = todayDateSupabaseFormat();
+
+        // Update atómico: solo canjea si está AVAILABLE y no vencido
+        const { data, error } = await supabase
+            .from("coupons")
+            .update({
+                coupon_status: "REDEEMED",
+                coupon_redeemed_at: today,
+                coupon_redeemed_by: user.id,
+            })
+            .eq("coupon_code", code)
+            .eq("coupon_status", "AVAILABLE")
+            .gte("coupon_expires_at", today)
+            .select("coupon_id, coupon_code, coupon_status, coupon_redeemed_at")
+            .maybeSingle();
+
+        if (error) throw error;
+
+        return data;
+    },
 }));
