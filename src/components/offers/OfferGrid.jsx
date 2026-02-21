@@ -1,7 +1,7 @@
 import React from "react";
 import { OfferCard } from "./OfferCard";
 
-export const OfferGrid = ({ products, onAddToCart }) => {
+export const OfferGrid = ({ products }) => {
     return (
         <div
             className="
@@ -12,7 +12,7 @@ export const OfferGrid = ({ products, onAddToCart }) => {
     "
         >
             {products.map((p) => (
-                <OfferCard key={p.id} product={p} onAddToCart={onAddToCart} />
+                <OfferCard key={p.id} product={p} />
             ))}
         </div>
     );

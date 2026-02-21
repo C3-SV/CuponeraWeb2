@@ -5,7 +5,6 @@ import { OrderSummary } from "../components/cart/OrderSummary";
 
 export const Cart = () => {
     const cart = useShopStore((state) => state.cart);
-
     return (
         <>
             <title>Mi carrito</title>

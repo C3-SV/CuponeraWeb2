@@ -85,7 +85,7 @@ export default function RootLayout() {
                         <NavLink to="/offers" className={linkDesktop}>
                             Ofertas
                         </NavLink>
-                        <NavLink to="/mis-cupones" className={linkDesktop}>
+                        <NavLink to="/coupons" className={linkDesktop}>
                             Mis cupones
                         </NavLink>
                     </div>
@@ -196,7 +196,7 @@ export default function RootLayout() {
                                         Ofertas
                                     </NavLink>
                                     <NavLink
-                                        to="/mis-cupones"
+                                        to="/coupons"
                                         className={linkMobile}
                                         onClick={() => setMobileOpen(false)}
                                     >
@@ -308,7 +308,7 @@ export default function RootLayout() {
                                 </li>
                                 <li>
                                     <NavLink
-                                        to="/mis-cupones"
+                                        to="/coupons"
                                         className="hover:text-white transition"
                                     >
                                         Mis cupones

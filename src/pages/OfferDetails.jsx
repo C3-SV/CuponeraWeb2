@@ -12,14 +12,14 @@ import { useParams } from "react-router-dom";
 export const OfferDetails = () => {
     const { id } = useParams();
 
-    // ✅ Usamos Zustand para obtener datos y la acción
+    // Usamos Zustand para obtener datos y la acción
     const products = useShopStore((state) => state.products);
     const addToCart = useShopStore((state) => state.addToCart);
 
     // Lógica de búsqueda (igual que antes)
     const offer = products.find((p) => p.id === id);
     const relatedOffers = products.filter(
-        (p) => p.category === offer?.category && p.id !== offer?.id,
+        (p) => p.categoryName === offer?.categoryName && p.id !== offer?.id,
     );
 
     if (!offer)
@@ -29,18 +29,6 @@ export const OfferDetails = () => {
     const displayOffer = {
         ...offer,
         title: offer.name,
-        categoryName: offer.category.toUpperCase(),
-    };
-
-    // ====== HANDLERS ======
-    const handleAddToCart = (qty) => {
-        console.log("Add to cart principal:", { offerId: offer.id, qty });
-        addToCart(offer, qty);
-    };
-
-    const handleRelatedAddToCart = (product) => {
-        console.log("Add related:", product);
-        addToCart(product, 1);
     };
 
     return (
@@ -58,9 +46,12 @@ export const OfferDetails = () => {
                             <OfferInfo
                                 title={displayOffer.title}
                                 price={displayOffer.price}
-                                oldPrice={displayOffer.oldPrice}
+                                regularPrice={displayOffer.regularPrice}
                                 stock={displayOffer.stock}
                                 description={displayOffer.description}
+                                businessName={offer.businessName}
+                                companyPhoto={offer.companyPhoto}
+                                categoryName={offer.categoryName}
                             />
 
                             <CartForm

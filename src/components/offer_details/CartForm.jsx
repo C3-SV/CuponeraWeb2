@@ -1,14 +1,19 @@
 import { useState } from "react";
 
 export const CartForm = ({ stock, categoryName, onAddToCart }) => {
+
+    const max = Number.isFinite(Number(stock)) && Number(stock) > 0 ? Number(stock) : 999;
+
     const [qty, setQty] = useState(1);
 
-    const decQty = () => setQty((q) => Math.max(1, q - 1));
-    const incQty = () => setQty((q) => Math.min(stock ?? 999, q + 1));
+    const decQty = () => setQty((q) => Math.max(1, Number(q) - 1));
+    const incQty = () => setQty((q) => Math.min(max, Number(q) + 1));
 
     const handleSubmit = (e) => {
+        console.log("DETAILS stock/qty:", { stock, qty, qtyType: typeof qty });
         e.preventDefault();
-        onAddToCart(qty);
+        const safeQty = Math.max(1, Math.min(max, Number(qty) || 1));
+        onAddToCart(safeQty);
     };
 
     return (
@@ -50,7 +55,7 @@ export const CartForm = ({ stock, categoryName, onAddToCart }) => {
                                 );
                             }}
                             onBlur={() => {
-                                if (qty === "") setQty(1);
+                                if (qty === "" || !Number.isFinite(Number(qty))) setQty(1);
                             }}
                             inputMode="numeric"
                             className="h-10 w-14 sm:w-16 text-center text-sm font-medium text-gray-900 outline-none border-x border-gray-300 bg-white flex-1"

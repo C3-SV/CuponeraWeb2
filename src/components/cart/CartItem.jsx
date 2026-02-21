@@ -1,9 +1,55 @@
 import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import Swal from "sweetalert2";
 import { useShopStore } from "../../store/useShop";
 
 export const CartItem = ({ item }) => {
+    //console.log("CART ITEM RENDER:", item);
     const removeFromCart = useShopStore((state) => state.removeFromCart);
     const updateQuantity = useShopStore((state) => state.updateQuantity);
+
+    // para mostrar el limite
+    const max = useMemo(() => {
+        const s = Number(item.stock);
+        return Number.isFinite(s) && s > 0 ? s : 999;
+    }, [item.stock]);
+
+    const [qty, setQty] = useState(String(item.quantity ?? 1));
+
+    // Sincroniza si el store cambia quantity
+    useEffect(() => {
+        setQty(String(item.quantity ?? 1));
+    }, [item.quantity]);
+
+    const commitQty = (raw) => {
+        const num = Math.max(1, Math.min(max, Number(raw) || 1));
+        setQty(String(num));
+        updateQuantity(item.id, num); // number
+    };
+
+    const decQty = () => commitQty((Number(qty) || 1) - 1);
+    const incQty = () => commitQty((Number(qty) || 1) + 1);
+
+    const confirmRemove = async () => {
+        const r = await Swal.fire({
+            title: "¿Eliminar del carrito?",
+            text: item.name || "Este producto",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Sí, eliminar",
+            cancelButtonText: "Cancelar",
+        });
+
+        if (r.isConfirmed) {
+            removeFromCart(item.id);
+            Swal.fire({
+                title: "Eliminado",
+                icon: "success",
+                timer: 900,
+                showConfirmButton: false,
+            });
+        }
+    };
 
     return (
         <li className="flex py-6 sm:py-10">
@@ -41,40 +87,48 @@ export const CartItem = ({ item }) => {
                     </div>
 
                     <div className="mt-4 sm:mt-0 sm:pr-9">
-                        {/* Selector de Cantidad */}
-                        <div className="grid w-full max-w-16 grid-cols-1">
-                            <select
-                                value={item.quantity}
-                                onChange={(e) =>
-                                    updateQuantity(item.id, e.target.value)
-                                }
-                                className="col-start-1 row-start-1 appearance-none rounded-md bg-white py-1.5 pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-secondary-hover sm:text-sm/6"
-                            >
-                                {[...Array(10).keys()].map((n) => (
-                                    <option key={n + 1} value={n + 1}>
-                                        {n + 1}
-                                    </option>
-                                ))}
-                            </select>
-                            <svg
-                                viewBox="0 0 16 16"
-                                fill="currentColor"
-                                aria-hidden="true"
-                                className="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4"
-                            >
-                                <path
-                                    fillRule="evenodd"
-                                    d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
-                                    clipRule="evenodd"
+                        {/*Control de cantidad*/}
+                        <div className="flex sm:block">
+                            <div className="inline-flex w-8/10 sm:w-fit items-center overflow-hidden rounded-md border border-gray-300 bg-white mx-auto sm:mx-0">
+                                <button
+                                    type="button"
+                                    onClick={decQty}
+                                    className="size-10 grid place-items-center hover:bg-gray-50 transition"
+                                >
+                                    <span className="text-xl leading-none">−</span>
+                                </button>
+
+                                <input
+                                    value={qty}
+                                    onChange={(e) => {
+                                        const val = e.target.value.replace(/[^\d]/g, "");
+                                        if (val === "") {
+                                            setQty("");
+                                            return;
+                                        }
+                                        const next = Math.max(1, Math.min(max, Number(val)));
+                                        setQty(String(next));
+                                    }}
+                                    onBlur={() => {
+                                        commitQty(qty);
+                                    }}
+                                    inputMode="numeric"
+                                    className="h-10 w-14 sm:w-16 text-center text-sm font-medium text-gray-900 outline-none border-x border-gray-300 bg-white flex-1"
                                 />
-                            </svg>
+                                <button
+                                    type="button"
+                                    onClick={incQty}
+                                    className="size-10 grid place-items-center bg-primary text-white hover:bg-primary-hover transition"
+                                >
+                                    <span className="text-xl leading-none">+</span>
+                                </button>
+                            </div>
                         </div>
 
-                        {/* Botón Eliminar */}
                         <div className="absolute top-0 right-0">
                             <button
                                 type="button"
-                                onClick={() => removeFromCart(item.id)}
+                                onClick={confirmRemove}
                                 className="-m-2 inline-flex p-2 text-gray-400 hover:text-red-500 transition-colors"
                             >
                                 <span className="sr-only">Eliminar</span>

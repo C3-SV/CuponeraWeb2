@@ -4,6 +4,7 @@ import { MobileFiltersDialog } from "../components/offers/MobileFiltersDialog";
 import { OfferGrid } from "../components/offers/OfferGrid";
 import { FiltersLayout } from "../components/offers/FiltersLayout";
 import { useShopStore } from "../store/useShop";
+import { useEffect } from "react";
 
 export const Offers = ({ title }) => {
     const [priceRange, setPriceRange] = useState({ min: 0, max: 1000 });
@@ -14,8 +15,12 @@ export const Offers = ({ title }) => {
         { label: "Hogar", value: "home", checked: true },
     ];
 
+    const loadOffers = useShopStore((s) => s.loadOffers);
     const products = useShopStore((state) => state.products);
-    const addToCart = useShopStore((state) => state.addToCart);
+
+    useEffect(() => {
+        loadOffers();
+    }, [loadOffers]);
 
     // Objeto de props compartido para no repetir código
     const filterProps = {
@@ -36,31 +41,31 @@ export const Offers = ({ title }) => {
     ];
 
     return (
-        <div className="bg-white">
-            <MobileFiltersDialog>
-                <FiltersLayout {...filterProps} />
-            </MobileFiltersDialog>
+        <>
+            <title>{title}</title>
+            <div className="bg-white">
+                <MobileFiltersDialog>
+                    <FiltersLayout {...filterProps} />
+                </MobileFiltersDialog>
 
-            <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <OfferCatalogHeader
-                    title="Nuevas Ofertas"
-                    sortOptions={sortOptions}
-                    onSortSelect={() => {}}
-                />
-                <section className="pt-6 pb-24">
-                    <div className="grid grid-cols-1 gap-8 lg:grid-cols-[260px_1fr]">
-                        <aside className="hidden lg:block">
-                            <FiltersLayout {...filterProps} />
-                        </aside>
-                        <section>
-                            <OfferGrid
-                                products={products}
-                                onAddToCart={(p) => addToCart(p, 1)}
-                            />
-                        </section>
-                    </div>
-                </section>
-            </main>
-        </div>
+                <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <OfferCatalogHeader
+                        title="Nuevas Ofertas"
+                        sortOptions={sortOptions}
+                        onSortSelect={() => {}}
+                    />
+                    <section className="pt-6 pb-24">
+                        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[260px_1fr]">
+                            <aside className="hidden lg:block">
+                                <FiltersLayout {...filterProps} />
+                            </aside>
+                            <section>
+                                <OfferGrid products={products} />
+                            </section>
+                        </div>
+                    </section>
+                </main>
+            </div>
+        </>
     );
 };
