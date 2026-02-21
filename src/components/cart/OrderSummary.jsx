@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Swal from "sweetalert2";
 import { useShopStore } from "../../store/useShop";
 
 export const OrderSummary = () => {
@@ -15,9 +16,40 @@ export const OrderSummary = () => {
   const API = import.meta.env.VITE_API_BASE_URL || "http://localhost:4242";
 
   const handlePay = async () => {
-    if (cart.length === 0) return;
+    if (cart.length === 0) {
+      await Swal.fire({
+        title: "Carrito vacío",
+        text: "Agregá al menos un producto para continuar.",
+        icon: "info",
+      });
+      return;
+    }
+
+    const confirm = await Swal.fire({
+      title: "Confirmar pago",
+      html: `
+        <div style="text-align:left">
+          <div>Subtotal: <b>$${subtotal.toFixed(2)}</b></div>
+          <div>Comisión: <b>$${serviceFee.toFixed(2)}</b></div>
+          <div style="margin-top:8px">Total: <b>$${total.toFixed(2)}</b></div>
+        </div>
+      `,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Proceder",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (!confirm.isConfirmed) return;
+
     try {
       setLoading(true);
+
+      Swal.fire({
+        title: "Procesando pago...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+      });
 
       const amountCents = Math.round(total * 100);
 
@@ -27,20 +59,45 @@ export const OrderSummary = () => {
         body: JSON.stringify({ amountCents, cart }),
       });
 
-      const data = await r.json();
+      let data = null;
+      try {
+        data = await r.json();
+      } catch {
+        // ignore parse
+      }
 
-      if (data.ok && data.status === "succeeded") {
-         const paymentRef = data.paymentIntentId ?? null;
+      if (r.ok && data?.ok && data?.status === "succeeded") {
+        const paymentRef = data.paymentIntentId ?? null;
+
         await useShopStore.getState().savePurchaseToSupabase({ paymentRef });
-        await useShopStore.getState().loadMyCouponsFromSupabase(); // la hacemos abajo
+        await useShopStore.getState().loadMyCouponsFromSupabase();
+
+        Swal.close();
+        await Swal.fire({
+          title: "¡Pago exitoso!",
+          text: "Tu compra fue confirmada y tus cupones ya están listos.",
+          icon: "success",
+        });
+
         return;
       }
 
-      alert("Pago no completado.");
+      Swal.close();
+      await Swal.fire({
+        title: "Pago no completado",
+        text: data?.error || "Intenta de nuevo.",
+        icon: "error",
+      });
     } catch (e) {
-      alert("Error técnico llamando al backend." + e?.message);
+      Swal.close();
+      await Swal.fire({
+        title: "Error técnico",
+        text: (e?.message || "No se pudo procesar el pago."),
+        icon: "error",
+      });
     } finally {
       setLoading(false);
+      Swal.close();
     }
   };
 

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { supabase } from "../lib/supabaseClient";
+import Swal from "sweetalert2";
 
 const toISO = (d) => new Date(d).toISOString();
 
@@ -120,6 +121,17 @@ export const useShopStore = create((set, get) => ({
         if (error) {
             console.error("loadOffers:", error);
             set({ productsLoading: false, productsError: error.message });
+
+            Swal.fire({
+                toast: true,
+                position: "top-end",
+                icon: "error",
+                title: "No se pudieron cargar las ofertas",
+                showConfirmButton: false,
+                timer: 1600,
+                timerProgressBar: true,
+            });
+
             return;
         }
 
@@ -347,6 +359,17 @@ export const useShopStore = create((set, get) => ({
 
             if (existingItem) {
                 const current = Number(existingItem.quantity || 0);
+
+                Swal.fire({
+                    toast: true,
+                    position: "top-end",
+                    icon: "success",
+                    title: "Cantidad actualizada en el carrito",
+                    showConfirmButton: false,
+                    timer: 1400,
+                    timerProgressBar: true,
+                });
+
                 return {
                     cart: state.cart.map((item) =>
                         item.id === product.id
@@ -355,6 +378,17 @@ export const useShopStore = create((set, get) => ({
                     ),
                 };
             }
+
+            Swal.fire({
+                toast: true,
+                position: "top-end",
+                icon: "success",
+                title: "Agregado al carrito",
+                showConfirmButton: false,
+                timer: 1400,
+                timerProgressBar: true,
+            });
+
             return { cart: [...state.cart, { ...product, quantity: qty }] };
         }),
 
@@ -373,7 +407,45 @@ export const useShopStore = create((set, get) => ({
             };
         }),
 
-    clearCart: () => set({ cart: [] }),
+    clearCart: () => {
+        const cart = get().cart;
+
+        if (!cart || cart.length === 0) {
+            Swal.fire({
+                toast: true,
+                position: "top-end",
+                icon: "info",
+                title: "El carrito ya está vacío",
+                showConfirmButton: false,
+                timer: 1400,
+                timerProgressBar: true,
+            });
+            return;
+        }
+
+        Swal.fire({
+            title: "¿Vaciar carrito?",
+            text: "Se eliminarán todos los productos del carrito.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Sí, vaciar",
+            cancelButtonText: "Cancelar",
+        }).then((r) => {
+            if (r.isConfirmed) {
+                set({ cart: [] });
+
+                Swal.fire({
+                    toast: true,
+                    position: "top-end",
+                    icon: "success",
+                    title: "Carrito vaciado",
+                    showConfirmButton: false,
+                    timer: 1400,
+                    timerProgressBar: true,
+                });
+            }
+        });
+    },
 
     // Acciones de cupones
     finalizePurchase: (meta = {}) =>

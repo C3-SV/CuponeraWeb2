@@ -1,5 +1,44 @@
+import Swal from "sweetalert2";
+
 export const CouponCard = ({ coupon, category, onDownloadPdf }) => {
   const isAvailable = category === "available";
+
+  const handleDownload = async () => {
+    if (!onDownloadPdf) {
+      await Swal.fire({
+        title: "Acción no disponible",
+        text: "No hay función de descarga configurada.",
+        icon: "info",
+      });
+      return;
+    }
+
+    try {
+      Swal.fire({
+        title: "Generando PDF...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+      });
+
+      await onDownloadPdf(coupon);
+
+      Swal.close();
+      await Swal.fire({
+        title: "Listo",
+        text: "PDF generado.",
+        icon: "success",
+        timer: 1000,
+        showConfirmButton: false,
+      });
+    } catch (e) {
+      Swal.close();
+      await Swal.fire({
+        title: "No se pudo generar el PDF",
+        text: e?.message || "Intenta de nuevo.",
+        icon: "error",
+      });
+    }
+  };
 
   return (
     <li className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-6">
@@ -66,7 +105,7 @@ export const CouponCard = ({ coupon, category, onDownloadPdf }) => {
         {isAvailable ? (
           <button
             type="button"
-            onClick={() => onDownloadPdf?.(coupon)}
+            onClick={handleDownload}
             className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover transition"
           >
             Descargar PDF
