@@ -1,17 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { OfferCatalogHeader } from "../components/offers/OfferCatalogHeader";
 import { MobileFiltersDialog } from "../components/offers/MobileFiltersDialog";
 import { OfferGrid } from "../components/offers/OfferGrid";
 import { FiltersLayout } from "../components/offers/FiltersLayout";
 import { useShopStore } from "../store/useShop";
-import { useEffect } from "react";
 
 export const Offers = ({ title }) => {
-    const [priceRange, setPriceRange] = useState({ min: 0, max: 1000 });
+    const [priceRange, setPriceRange] = useState({ min: 0, max: 5000 });
     const [endDate, setEndDate] = useState("");
     const [selectedRubros, setSelectedRubros] = useState([]);
     const [filteredProducts, setFilteredProducts] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
+
+    const [sortOption, setSortOption] = useState("");
 
     const loadOffers = useShopStore((s) => s.loadOffers);
     const loadCategories = useShopStore((s) => s.loadCategories);
@@ -30,7 +31,6 @@ export const Offers = ({ title }) => {
         loadCategories();
     }, [loadOffers, loadCategories]);
 
-    // When coming from the home page with a selected category, pre-select it
     useEffect(() => {
         if (selectedCategory) {
             setSelectedRubros([selectedCategory]);
@@ -38,16 +38,11 @@ export const Offers = ({ title }) => {
         }
     }, [selectedCategory, setCategory]);
 
-    // Auto-apply filter once products are loaded and a rubro is pre-selected
-    useEffect(() => {
-        if (products.length > 0 && selectedRubros.length > 0 && filteredProducts === null) {
-            setFilteredProducts(products.filter((p) => selectedRubros.includes(p.categoryId)));
-        }
-    }, [products, selectedRubros, filteredProducts]);
-
     const handleRubroChange = (value) => {
         setSelectedRubros((prev) =>
-            prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+            prev.includes(value)
+                ? prev.filter((v) => v !== value)
+                : [...prev, value],
         );
     };
 
@@ -55,12 +50,16 @@ export const Offers = ({ title }) => {
         let result = [...products];
 
         if (selectedRubros.length > 0) {
-            result = result.filter((p) => selectedRubros.includes(p.categoryId));
+            result = result.filter((p) =>
+                selectedRubros.includes(p.categoryId),
+            );
         }
 
-        if (priceRange.min > 0 || priceRange.max < 5000) {
+        if (priceRange.min !== 0 || priceRange.max !== 5000) {
             result = result.filter(
-                (p) => p.price >= priceRange.min && p.price <= priceRange.max
+                (p) =>
+                    Number(p.price || 0) >= priceRange.min &&
+                    Number(p.price || 0) <= priceRange.max,
             );
         }
 
@@ -78,7 +77,6 @@ export const Offers = ({ title }) => {
         setFilteredProducts(null);
     };
 
-    // Objeto de props compartido para no repetir código
     const filterProps = {
         priceRange,
         setPriceRange,
@@ -92,12 +90,11 @@ export const Offers = ({ title }) => {
     };
 
     const sortOptions = [
-        { label: "Más vendidos", value: "best_selling" },
+        { label: "Todos", value: "" },
         { label: "Nombre: A-Z", value: "name_asc" },
         { label: "Nombre: Z-A", value: "name_desc" },
         { label: "Precio: Menor a Mayor", value: "price_asc" },
         { label: "Precio: Mayor a Menor", value: "price_desc" },
-        { label: "Fecha de Vencimiento Próxima", value: "end_date" },
     ];
 
     const baseProducts = filteredProducts ?? products;
@@ -112,6 +109,41 @@ export const Offers = ({ title }) => {
           })
         : baseProducts;
 
+    const sortedProducts = useMemo(() => {
+        const result = [...displayedProducts];
+
+        if (!sortOption) return result;
+
+        const byNameAsc = (a, b) =>
+            (a.name || "").localeCompare(b.name || "", undefined, {
+                sensitivity: "base",
+            });
+
+        const byNameDesc = (a, b) =>
+            (b.name || "").localeCompare(a.name || "", undefined, {
+                sensitivity: "base",
+            });
+
+        const byPriceAsc = (a, b) =>
+            Number(a.price || 0) - Number(b.price || 0);
+
+        const byPriceDesc = (a, b) =>
+            Number(b.price || 0) - Number(a.price || 0);
+
+        switch (sortOption) {
+            case "name_asc":
+                return result.sort(byNameAsc);
+            case "name_desc":
+                return result.sort(byNameDesc);
+            case "price_asc":
+                return result.sort(byPriceAsc);
+            case "price_desc":
+                return result.sort(byPriceDesc);
+            default:
+                return result;
+        }
+    }, [displayedProducts, sortOption]);
+
     return (
         <>
             <title>{title}</title>
@@ -124,7 +156,8 @@ export const Offers = ({ title }) => {
                     <OfferCatalogHeader
                         title="Nuevas Ofertas"
                         sortOptions={sortOptions}
-                        onSortSelect={() => {}}
+                        onSortSelect={setSortOption}
+                        currentSort={sortOption}
                         searchQuery={searchQuery}
                         onSearchChange={setSearchQuery}
                     />
@@ -134,7 +167,7 @@ export const Offers = ({ title }) => {
                                 <FiltersLayout {...filterProps} />
                             </aside>
                             <section>
-                                <OfferGrid products={displayedProducts} />
+                                <OfferGrid products={sortedProducts} />
                             </section>
                         </div>
                     </section>

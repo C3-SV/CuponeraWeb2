@@ -1,7 +1,12 @@
-import React from "react";
 import { SortDropdown } from "./SortDropdown";
 
-export const OfferCatalogHeader = ({ sortOptions, onSortSelect, searchQuery, onSearchChange }) => {
+export const OfferCatalogHeader = ({
+    sortOptions,
+    onSortSelect,
+    currentSort,
+    searchQuery,
+    onSearchChange,
+}) => {
     return (
         <div className="pt-10 pb-6">
             <div
@@ -52,6 +57,7 @@ export const OfferCatalogHeader = ({ sortOptions, onSortSelect, searchQuery, onS
                     <SortDropdown
                         options={sortOptions}
                         onSelect={onSortSelect}
+                        value={currentSort}
                     />
 
                     <button
