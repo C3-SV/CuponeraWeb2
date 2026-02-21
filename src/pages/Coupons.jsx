@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useShopStore } from "../store/useShop";
 import { CouponsTabs } from "../components/coupons/CouponsTabs";
 import { CouponCard } from "../components/coupons/CouponCard";
+import { coupons_pdf_maker } from "../utils/coupons_pdf_maker"; 
 
 const mockCoupons = [
     {
@@ -40,9 +41,9 @@ const mockCoupons = [
 
 export const Coupons = () => {
     const coupons = useShopStore((s) => s.coupons);
-    const refresh = useShopStore((s) => s.refreshCouponStatuses);
+    const load = useShopStore((s) => s.loadMyCouponsFromSupabase);
 
-    useEffect(() => { refresh(); }, []);
+    useEffect(() => { load(); }, []);
 
     const [active, setActive] = useState("available");
 
@@ -67,10 +68,13 @@ export const Coupons = () => {
 
     const list = buckets[active] || [];
 
-    const handleDownloadPdf = (coupon) => {
-        // Placeholder para el pdf, todavia no se tiene la logica para esto 
-        console.log("TODO: generar PDF para cupón:", coupon);
-        alert(`TODO: Generar PDF del cupón ${coupon.code}`);
+    const handleDownloadPdf = async (coupon) => {
+        try {
+            await coupons_pdf_maker(coupon);
+        } catch (e) {
+            console.error("Error al generar PDF del cupón:", e);
+            alert(`Error al generar PDF del cupón ${coupon.code}`);
+        }
     };
 
     return (
