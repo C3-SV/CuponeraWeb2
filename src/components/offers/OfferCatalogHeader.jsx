@@ -1,7 +1,7 @@
 import React from "react";
 import { SortDropdown } from "./SortDropdown";
 
-export const OfferCatalogHeader = ({ sortOptions, onSortSelect }) => {
+export const OfferCatalogHeader = ({ sortOptions, onSortSelect, searchQuery, onSearchChange }) => {
     return (
         <div className="pt-10 pb-6">
             <div
@@ -35,6 +35,8 @@ export const OfferCatalogHeader = ({ sortOptions, onSortSelect }) => {
                     <input
                         type="text"
                         placeholder="Buscar..."
+                        value={searchQuery ?? ""}
+                        onChange={(e) => onSearchChange(e.target.value)}
                         className="w-full rounded-full bg-surface py-2 pl-10 pr-4 text-sm outline-none ring-1 ring-black/5 focus:ring-2 focus:ring-secondary-hover"
                     />
                 </div>

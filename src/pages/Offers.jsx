@@ -11,6 +11,7 @@ export const Offers = ({ title }) => {
     const [endDate, setEndDate] = useState("");
     const [selectedRubros, setSelectedRubros] = useState([]);
     const [filteredProducts, setFilteredProducts] = useState(null);
+    const [searchQuery, setSearchQuery] = useState("");
 
     const loadOffers = useShopStore((s) => s.loadOffers);
     const loadCategories = useShopStore((s) => s.loadCategories);
@@ -99,6 +100,18 @@ export const Offers = ({ title }) => {
         { label: "Fecha de Vencimiento Próxima", value: "end_date" },
     ];
 
+    const baseProducts = filteredProducts ?? products;
+    const displayedProducts = searchQuery
+        ? baseProducts.filter((p) => {
+              const q = searchQuery.toLowerCase();
+              return (
+                  p.name?.toLowerCase().includes(q) ||
+                  p.description?.toLowerCase().includes(q) ||
+                  p.businessName?.toLowerCase().includes(q)
+              );
+          })
+        : baseProducts;
+
     return (
         <>
             <title>{title}</title>
@@ -112,6 +125,8 @@ export const Offers = ({ title }) => {
                         title="Nuevas Ofertas"
                         sortOptions={sortOptions}
                         onSortSelect={() => {}}
+                        searchQuery={searchQuery}
+                        onSearchChange={setSearchQuery}
                     />
                     <section className="pt-6 pb-24">
                         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[260px_1fr]">
@@ -119,7 +134,7 @@ export const Offers = ({ title }) => {
                                 <FiltersLayout {...filterProps} />
                             </aside>
                             <section>
-                                <OfferGrid products={filteredProducts ?? products} />
+                                <OfferGrid products={displayedProducts} />
                             </section>
                         </div>
                     </section>
