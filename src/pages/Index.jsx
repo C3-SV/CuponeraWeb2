@@ -1,7 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useShopStore } from "../store/useShop";
 
-// Importamos las secciones
 import { HeroSection } from "../components/index/HeroSection";
 import { CategoriesSection } from "../components/index/CategoriesSection";
 import { FeaturesSection } from "../components/index/FeaturesSection";
@@ -11,28 +10,38 @@ import { CtaSection } from "../components/index/CtaSection";
 
 export const Index = () => {
     const setCategory = useShopStore((s) => s.setCategory);
-    const offers = useShopStore((s) => s.products);
+    const loadCategories = useShopStore((s) => s.loadCategories);
+    const loadEndingSoon = useShopStore((s) => s.loadEndingSoon);
+    const loadBestSellers = useShopStore((s) => s.loadBestSellers);
 
-    // Lógica de Reinicio: Reseteamos filtro al entrar a la página
+    const [isLoading, setIsLoading] = useState(true);
+
     useEffect(() => {
         setCategory(null);
-    }, [setCategory]);
 
-    // Preparamos los datos para las secciones de productos
-    const expiringOffers =
-        offers && offers.length > 0 ? offers.slice(0, 3) : [];
-    const bestSellingOffers =
-        offers && offers.length > 0 ? offers.slice(0, 12) : [];
+        const fetchAllData = async () => {
+            setIsLoading(true);
+
+            await Promise.all([
+                loadCategories(),
+                loadEndingSoon(),
+                loadBestSellers(),
+            ]);
+
+            setIsLoading(false);
+        };
+
+        fetchAllData();
+    }, []);
 
     return (
         <div className="relative bg-white w-full">
             <HeroSection />
-            <CategoriesSection />
+
+            <CategoriesSection isLoading={isLoading} />
             <FeaturesSection />
-
-            <EndingSoonSection offers={expiringOffers} />
-
-            <BestSellingSection offers={bestSellingOffers} />
+            <EndingSoonSection isLoading={isLoading} />
+            <BestSellingSection isLoading={isLoading} />
 
             <CtaSection />
         </div>
