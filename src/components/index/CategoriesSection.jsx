@@ -1,38 +1,18 @@
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useShopStore } from "../../store/useShop";
-import {
-    ArrowLeftIcon,
-    ArrowRightIcon,
-    AllIcon,
-    RestaurantIcon,
-    TechIcon,
-    BeautyIcon,
-    TravelIcon,
-    ServiceIcon,
-    FunIcon,
-} from "../ui/Icons";
+import { ArrowLeftIcon, ArrowRightIcon } from "../ui/Icons";
 
-export const CategoriesSection = () => {
+export const CategoriesSection = ({ isLoading }) => {
     const navigate = useNavigate();
-    const scrollerRef = useRef(null);
+    const categories = useShopStore((s) => s.categories);
     const setCategory = useShopStore((s) => s.setCategory);
-
-    const categories = [
-        { id: "Restaurantes", label: "Restaurantes", icon: RestaurantIcon },
-        { id: "Tecnología", label: "Tecnología", icon: TechIcon },
-        { id: "Belleza", label: "Belleza", icon: BeautyIcon },
-        { id: "Viajes", label: "Viajes", icon: TravelIcon },
-        { id: "Servicios", label: "Servicios", icon: ServiceIcon },
-        { id: "Entretenimiento", label: "Entretenimiento", icon: FunIcon },
-    ];
-
-    const step = 176;
+    const scrollerRef = useRef(null);
 
     const scrollByDir = (dir) => {
         const scroller = scrollerRef.current;
         if (!scroller) return;
-        scroller.scrollBy({ left: dir * step, behavior: "smooth" });
+        scroller.scrollBy({ left: dir * 176, behavior: "smooth" });
     };
 
     const handleSelectCategory = (catId) => {
@@ -79,38 +59,46 @@ export const CategoriesSection = () => {
                     ref={scrollerRef}
                     className="flex gap-4 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] [-ms-overflow-style:none]"
                 >
-                    <style>{`div::-webkit-scrollbar { display: none; }`}</style>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setCategory(null);
-                            navigate("/offers");
-                        }}
-                        className={cardClass}
-                    >
-                        <div>
-                            <AllIcon className="h-8 w-8" />
-                        </div>
-                        <span className="text-sm font-medium">Todas</span>
-                    </button>
-                    {categories.map((cat) => {
-                        const Icon = cat.icon;
-                        return (
-                            <button
-                                key={cat.id}
-                                type="button"
-                                onClick={() => handleSelectCategory(cat.id)}
-                                className={cardClass}
-                            >
-                                <div>
-                                    <Icon className="h-8 w-8" />
-                                </div>
-                                <span className="text-sm font-medium">
-                                    {cat.label}
-                                </span>
-                            </button>
-                        );
-                    })}
+                    {isLoading
+                        ? Array.from({ length: 6 }).map((_, index) => (
+                              <div
+                                  key={`skeleton-${index}`}
+                                  className="shrink-0 w-40 h-32 rounded-md border border-gray-100 bg-gray-50 flex flex-col items-center justify-center gap-3 animate-pulse"
+                              >
+                                  <div className="size-10 bg-gray-200 rounded-full"></div>
+                                  <div className="h-4 w-24 bg-gray-200 rounded"></div>
+                              </div>
+                          ))
+                        : categories.map((cat) => {
+                              const icon = cat.category_img;
+                              const iconHover = cat.category_img_hover;
+                              return (
+                                  <button
+                                      key={cat.category_id}
+                                      type="button"
+                                      onClick={() =>
+                                          handleSelectCategory(cat.category_id)
+                                      }
+                                      className={cardClass}
+                                  >
+                                      <div>
+                                          <img
+                                              src={icon}
+                                              alt={cat.alt_text}
+                                              className="size-10 block group-hover:hidden"
+                                          />
+                                          <img
+                                              src={iconHover}
+                                              alt={`${cat.alt_text} hover`}
+                                              className="size-10 hidden group-hover:block"
+                                          />
+                                      </div>
+                                      <span className="text-sm font-medium">
+                                          {cat.category_name}
+                                      </span>
+                                  </button>
+                              );
+                          })}
                 </div>
                 <div className="mt-8 h-px w-full bg-gray-200" />
             </div>
