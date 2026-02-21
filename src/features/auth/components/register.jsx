@@ -19,8 +19,54 @@ export default function Register() {
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const nameRegex = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/;
+  const duiRegex = /^\d{8}-\d{1}$/;
+  const phoneRegex = /^\d{8}$/;
   const handleRegister = async (e) => {
     e.preventDefault();
+    if (!name.trim()) {
+    return showError("Error", "El nombre es requerido");
+  }
+
+  if (!nameRegex.test(name)) {
+    return showError("Error", "El nombre solo puede contener letras y espacios");
+  }
+
+  if (!lastname.trim()) {
+    return showError("Error", "El apellido es requerido");
+  }
+
+  if (!nameRegex.test(lastname)) {
+    return showError("Error", "El apellido solo puede contener letras y espacios");
+  }
+
+  if (!email.trim()) {
+    return showError("Error", "El email es requerido");
+  }
+
+  if (!dui.trim()) {
+    return showError("Error", "El DUI es requerido");
+  }
+
+  if (!duiRegex.test(dui)) {
+    return showError("Error", "El DUI debe tener formato 00000000-0");
+  }
+
+  if (!phone.trim()) {
+    return showError("Error", "El teléfono es requerido");
+  }
+
+  if (!phoneRegex.test(phone)) {
+    return showError("Error", "El teléfono debe tener 8 números");
+  }
+
+  if (!password.trim()) {
+    return showError("Error", "La contraseña es requerida");
+  }
+
+  if (password.length <= 6) {
+  return showError("Error", "La contraseña debe tener más de 6 caracteres");
+}
     setLoading(true);
     setMsg("Registrando...");
     try {
