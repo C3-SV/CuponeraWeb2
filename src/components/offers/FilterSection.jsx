@@ -5,6 +5,8 @@ export const FilterSection = ({
     title,
     defaultOpen = false,
     options,
+    selectedValues = [],
+    onOptionChange,
     children,
 }) => {
     const [open, setOpen] = useState(defaultOpen);
@@ -64,9 +66,8 @@ export const FilterSection = ({
                                                     type="checkbox"
                                                     name={`${title.toLowerCase()}[]`}
                                                     value={opt.value}
-                                                    defaultChecked={
-                                                        !!opt.checked
-                                                    }
+                                                    checked={selectedValues.includes(opt.value)}
+                                                    onChange={() => onOptionChange?.(opt.value)}
                                                     className="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-secondary-hover checked:bg-secondary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary-hover"
                                                 />
                                                 <svg

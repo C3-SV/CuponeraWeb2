@@ -9,7 +9,10 @@ export const FiltersLayout = ({
     endDate,
     setEndDate,
     rubrosOptions,
-    onApply, // Nueva prop para ejecutar la acción
+    selectedRubros,
+    onRubroChange,
+    onApply,
+    onClear,
 }) => {
     const handleSliderChange = (newValue) => {
         setPriceRange((prev) => ({
@@ -25,6 +28,8 @@ export const FiltersLayout = ({
                 title="Rubros"
                 defaultOpen={true}
                 options={rubrosOptions}
+                selectedValues={selectedRubros}
+                onOptionChange={onRubroChange}
             />
 
             {/* 2. Precio */}
@@ -81,10 +86,7 @@ export const FiltersLayout = ({
 
                     <button
                         type="button"
-                        onClick={() => {
-                            setPriceRange({ min: 0, max: 5000 });
-                            setEndDate("");
-                        }}
+                        onClick={onClear}
                         className="mt-3 flex w-full items-center justify-center px-4 py-2 text-sm font-medium font-heading tracking-wide text-gray-400 hover:text-primary transition-colors"
                     >
                         Limpiar filtros
