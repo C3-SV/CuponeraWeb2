@@ -4,9 +4,6 @@ import { useShopStore } from "../../store/useShop";
 
 export const OrderSummary = () => {
   const cart = useShopStore((state) => state.cart);
-  // para terminar compra
-  const finalizePurchase = useShopStore((s) => s.finalizePurchase);
-
   // Cálculos dinámicos
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const serviceFee = 8.32; // se puede hacer mas dinámico (ej: subtotal * 0.05)
