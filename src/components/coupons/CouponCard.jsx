@@ -4,6 +4,8 @@ export const CouponCard = ({ coupon, category, onDownloadPdf }) => {
   const isAvailable = category === "available";
 
   const handleDownload = async () => {
+
+    // Sweet Alert: No hay funcion de descarga configurada
     if (!onDownloadPdf) {
       await Swal.fire({
         title: "Acción no disponible",
@@ -13,6 +15,7 @@ export const CouponCard = ({ coupon, category, onDownloadPdf }) => {
       return;
     }
 
+    // Sweet Alert: Generando PDF
     try {
       Swal.fire({
         title: "Generando PDF...",
@@ -22,6 +25,7 @@ export const CouponCard = ({ coupon, category, onDownloadPdf }) => {
 
       await onDownloadPdf(coupon);
 
+      // Sweet Alert: PDF Generado
       Swal.close();
       await Swal.fire({
         title: "Listo",
@@ -31,6 +35,7 @@ export const CouponCard = ({ coupon, category, onDownloadPdf }) => {
         showConfirmButton: false,
       });
     } catch (e) {
+      // Sweet Alert: No se genera el PDF
       Swal.close();
       await Swal.fire({
         title: "No se pudo generar el PDF",
