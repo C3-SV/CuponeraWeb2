@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
+import logo from "../assets/logo_mundo_cupones.svg";
 
 const linkDesktop = ({ isActive }) =>
     `text-sm transition ${
@@ -68,7 +69,7 @@ export default function RootLayout() {
                 <nav className="max-w-6xl mx-auto px-4 h-14 flex items-center gap-5">
                     <NavLink to="/" className="flex items-center gap-x-3">
                         <img
-                            src="src/assets/logo_mundo_cupones.svg"
+                            src={logo}
                             alt="Logo"
                             className="size-12"
                         />
@@ -124,7 +125,7 @@ export default function RootLayout() {
                 <div className="px-4 h-14 flex items-center justify-between">
                     <NavLink to="/" className="flex items-center gap-x-3">
                         <img
-                            src="src/assets/logo_mundo_cupones.svg"
+                            src={logo}
                             alt="Logo"
                             className="size-10"
                         />
@@ -262,7 +263,7 @@ export default function RootLayout() {
                         <div>
                             <div className="flex items-center gap-3">
                                 <img
-                                    src="src/assets/logo_mundo_cupones.svg"
+                                    src={logo}
                                     alt="Mundo Cupones"
                                     className="size-11"
                                 />

@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import heroImg from "../../assets/hero_img.svg";
+
 export const HeroSection = () => {
     return (
         <div className="flex flex-col lg:flex-row min-h-166">
@@ -24,7 +26,7 @@ export const HeroSection = () => {
             </div>
             <div className="relative h-128 w-full lg:h-auto lg:w-1/2 bg-secondary-hover lg:bg-transparent">
                 <img
-                    src="src/assets/hero_img.svg"
+                    src={heroImg}
                     alt=""
                     className="absolute inset-0 h-full w-full object-contain lg:object-cover"
                 />

@@ -1,13 +1,13 @@
 import { Link } from "react-router-dom";
-
 import React from "react";
+import logo from "../../assets/logo_mundo_cupones.svg";
 
 export const CtaSection = () => {
     return (
         <div className="flex flex-col lg:flex-row min-h-166">
             <div className="relative h-128 w-full lg:h-auto lg:w-1/2 bg-secondary-hover flex items-center">
                 <img
-                    src="src/assets/logo_mundo_cupones.svg"
+                    src={logo}
                     alt="Logo"
                     className="h-6/10 w-auto mx-auto"
                 />
