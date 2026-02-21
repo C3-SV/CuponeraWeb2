@@ -31,6 +31,7 @@ export const CartItem = ({ item }) => {
     const incQty = () => commitQty((Number(qty) || 1) + 1);
 
     const confirmRemove = async () => {
+        // Sweet Alert: Eliminar del carrito
         const r = await Swal.fire({
             title: "¿Eliminar del carrito?",
             text: item.name || "Este producto",
@@ -42,6 +43,7 @@ export const CartItem = ({ item }) => {
 
         if (r.isConfirmed) {
             removeFromCart(item.id);
+            // Sweet Alert: Producto eliminado del carrito
             Swal.fire({
                 title: "Eliminado",
                 icon: "success",
