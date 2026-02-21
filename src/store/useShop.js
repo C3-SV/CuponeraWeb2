@@ -165,6 +165,7 @@ export const useShopStore = create((set, get) => ({
             );
 
             const categoryName = row.company?.category_id?.category_name ?? null;
+            const categoryId = row.company?.category_id?.category_id ?? null;
 
             const validUntil = row.coupon_usage_deadline ?? row.offer_end_date ?? null;
 
@@ -188,6 +189,7 @@ export const useShopStore = create((set, get) => ({
                 businessName,
                 companyPhoto,
                 categoryName,
+                categoryId,
 
                 images,
                 mainImage: mainImage,

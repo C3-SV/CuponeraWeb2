@@ -9,18 +9,61 @@ import { useEffect } from "react";
 export const Offers = ({ title }) => {
     const [priceRange, setPriceRange] = useState({ min: 0, max: 1000 });
     const [endDate, setEndDate] = useState("");
-
-    const rubrosOptions = [
-        { label: "Tecnología", value: "tech" },
-        { label: "Hogar", value: "home", checked: true },
-    ];
+    const [selectedRubros, setSelectedRubros] = useState([]);
+    const [filteredProducts, setFilteredProducts] = useState(null);
 
     const loadOffers = useShopStore((s) => s.loadOffers);
+    const loadCategories = useShopStore((s) => s.loadCategories);
     const products = useShopStore((state) => state.products);
+    const categories = useShopStore((state) => state.categories);
+
+    const rubrosOptions = categories.map((cat) => ({
+        label: cat.category_name,
+        value: cat.category_id,
+    }));
 
     useEffect(() => {
         loadOffers();
-    }, [loadOffers]);
+        loadCategories();
+    }, [loadOffers, loadCategories]);
+
+    // Reset filtered products when base products change
+    useEffect(() => {
+        setFilteredProducts(null);
+    }, [products]);
+
+    const handleRubroChange = (value) => {
+        setSelectedRubros((prev) =>
+            prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+        );
+    };
+
+    const handleApply = () => {
+        let result = [...products];
+
+        if (selectedRubros.length > 0) {
+            result = result.filter((p) => selectedRubros.includes(p.categoryId));
+        }
+
+        if (priceRange.min > 0 || priceRange.max < 5000) {
+            result = result.filter(
+                (p) => p.price >= priceRange.min && p.price <= priceRange.max
+            );
+        }
+
+        if (endDate) {
+            result = result.filter((p) => p.endDate && p.endDate <= endDate);
+        }
+
+        setFilteredProducts(result);
+    };
+
+    const handleClear = () => {
+        setPriceRange({ min: 0, max: 5000 });
+        setEndDate("");
+        setSelectedRubros([]);
+        setFilteredProducts(null);
+    };
 
     // Objeto de props compartido para no repetir código
     const filterProps = {
@@ -29,6 +72,10 @@ export const Offers = ({ title }) => {
         endDate,
         setEndDate,
         rubrosOptions,
+        selectedRubros,
+        onRubroChange: handleRubroChange,
+        onApply: handleApply,
+        onClear: handleClear,
     };
 
     const sortOptions = [
@@ -60,7 +107,7 @@ export const Offers = ({ title }) => {
                                 <FiltersLayout {...filterProps} />
                             </aside>
                             <section>
-                                <OfferGrid products={products} />
+                                <OfferGrid products={filteredProducts ?? products} />
                             </section>
                         </div>
                     </section>
