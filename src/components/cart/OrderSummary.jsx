@@ -10,7 +10,7 @@ export const OrderSummary = () => {
   const total = subtotal + serviceFee;
 
   const [loading, setLoading] = useState(false);
-  const API = import.meta.env.VITE_API_BASE_URL || "http://localhost:4242";
+  const FUNCTIONS_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
   const handlePay = async () => {
     if (cart.length === 0) {
@@ -63,7 +63,7 @@ export const OrderSummary = () => {
 
       const amountCents = Math.round(total * 100);
 
-      const r = await fetch(`${API}/pay`, {
+      const r = await fetch(`${FUNCTIONS_BASE}/.netlify/functions/pay`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amountCents, cart }),
