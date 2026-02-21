@@ -1,6 +1,12 @@
 import React from "react";
 
-export const OfferInfo = ({ title, price, oldPrice, stock, description }) => {
+export const OfferInfo = ({
+    title,
+    price,
+    regularPrice,
+    stock,
+    description,
+}) => {
     return (
         <>
             <h1 className="text-2xl font-semibold tracking-wider text-gray-900 font-heading">
@@ -11,9 +17,9 @@ export const OfferInfo = ({ title, price, oldPrice, stock, description }) => {
                 <p className="text-2xl tracking-tight font-heading text-gray-900">
                     ${price}
                 </p>
-                {oldPrice && (
+                {regularPrice && (
                     <p className="ml-3 text-lg tracking-tight font-heading text-primary line-through">
-                        ${oldPrice}
+                        ${regularPrice}
                     </p>
                 )}
             </div>

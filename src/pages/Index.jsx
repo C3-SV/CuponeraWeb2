@@ -30,15 +30,9 @@ export const Index = () => {
             <CategoriesSection />
             <FeaturesSection />
 
-            <EndingSoonSection
-                offers={expiringOffers}
-                onAddToCart={(item) => console.log("Añadir al carrito", item)}
-            />
+            <EndingSoonSection offers={expiringOffers} />
 
-            <BestSellingSection
-                offers={bestSellingOffers}
-                onAddToCart={(item) => console.log("Add", item)}
-            />
+            <BestSellingSection offers={bestSellingOffers} />
 
             <CtaSection />
         </div>

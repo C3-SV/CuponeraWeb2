@@ -32,17 +32,6 @@ export const OfferDetails = () => {
         categoryName: offer.categoryName?.toUpperCase(),
     };
 
-    // ====== HANDLERS ======
-    const handleAddToCart = (qty) => {
-        console.log("Add to cart principal:", { offerId: offer.id, qty });
-        addToCart(offer, qty);
-    };
-
-    const handleRelatedAddToCart = (product) => {
-        console.log("Add related:", product);
-        addToCart(product, 1);
-    };
-
     return (
         <>
             <title>{offer.name}</title>
@@ -58,7 +47,7 @@ export const OfferDetails = () => {
                             <OfferInfo
                                 title={displayOffer.title}
                                 price={displayOffer.price}
-                                oldPrice={displayOffer.oldPrice}
+                                regularPrice={displayOffer.regularPrice}
                                 stock={displayOffer.stock}
                                 description={displayOffer.description}
                             />

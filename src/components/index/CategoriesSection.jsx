@@ -1,38 +1,27 @@
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useShopStore } from "../../store/useShop";
-import {
-    ArrowLeftIcon,
-    ArrowRightIcon,
-    AllIcon,
-    RestaurantIcon,
-    TechIcon,
-    BeautyIcon,
-    TravelIcon,
-    ServiceIcon,
-    FunIcon,
-} from "../ui/Icons";
+import { ArrowLeftIcon, ArrowRightIcon } from "../ui/Icons";
 
 export const CategoriesSection = () => {
     const navigate = useNavigate();
+
+    const loadCategories = useShopStore((s) => s.loadCategories);
+    const categories = useShopStore((s) => s.categories);
+
+    useEffect(() => {
+        loadCategories();
+    }, [loadCategories]);
+
+    console.log(categories);
+
     const scrollerRef = useRef(null);
     const setCategory = useShopStore((s) => s.setCategory);
-
-    const categories = [
-        { id: "Restaurantes", label: "Restaurantes", icon: RestaurantIcon },
-        { id: "Tecnología", label: "Tecnología", icon: TechIcon },
-        { id: "Belleza", label: "Belleza", icon: BeautyIcon },
-        { id: "Viajes", label: "Viajes", icon: TravelIcon },
-        { id: "Servicios", label: "Servicios", icon: ServiceIcon },
-        { id: "Entretenimiento", label: "Entretenimiento", icon: FunIcon },
-    ];
-
-    const step = 176;
 
     const scrollByDir = (dir) => {
         const scroller = scrollerRef.current;
         if (!scroller) return;
-        scroller.scrollBy({ left: dir * step, behavior: "smooth" });
+        scroller.scrollBy({ left: dir * 176, behavior: "smooth" });
     };
 
     const handleSelectCategory = (catId) => {
@@ -46,6 +35,7 @@ export const CategoriesSection = () => {
     return (
         <div className="mt-24 mb-16 mx-auto max-w-7xl px-6 lg:px-8">
             <div className="flex flex-wrap items-end justify-between gap-4">
+                {/* ... (Títulos y botones de scroll se mantienen igual) ... */}
                 <div>
                     <div className="flex items-center gap-3">
                         <span className="h-8 w-3 rounded bg-primary" />
@@ -79,34 +69,33 @@ export const CategoriesSection = () => {
                     ref={scrollerRef}
                     className="flex gap-4 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] [-ms-overflow-style:none]"
                 >
-                    <style>{`div::-webkit-scrollbar { display: none; }`}</style>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setCategory(null);
-                            navigate("/offers");
-                        }}
-                        className={cardClass}
-                    >
-                        <div>
-                            <AllIcon className="h-8 w-8" />
-                        </div>
-                        <span className="text-sm font-medium">Todas</span>
-                    </button>
                     {categories.map((cat) => {
-                        const Icon = cat.icon;
+                        const icon = cat.category_img;
+                        const iconHover = cat.category_img_hover;
+
                         return (
                             <button
-                                key={cat.id}
+                                key={cat.category_id}
                                 type="button"
-                                onClick={() => handleSelectCategory(cat.id)}
+                                onClick={() =>
+                                    handleSelectCategory(cat.category_id)
+                                }
                                 className={cardClass}
                             >
                                 <div>
-                                    <Icon className="h-8 w-8" />
+                                    <img
+                                        src={icon}
+                                        alt={cat.alt_text}
+                                        className="size-10 block group-hover:hidden"
+                                    />
+                                    <img
+                                        src={iconHover}
+                                        alt={`${cat.alt_text} hover`}
+                                        className="size-10 hidden group-hover:block"
+                                    />
                                 </div>
                                 <span className="text-sm font-medium">
-                                    {cat.label}
+                                    {cat.category_name}
                                 </span>
                             </button>
                         );

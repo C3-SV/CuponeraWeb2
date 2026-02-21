@@ -16,9 +16,22 @@ const computeStatus = ({ validUntil, redeemedAt }) => {
     return "available";
 };
 
+const PRODUCT_IMAGES_BUCKET = "product-images";
+const CATEGORY_IMAGES_BUCKET = "categories-icons";
+
+const toStorageUrl = (url, bucket) => {
+    if (!url) return null;
+    if (/^https?:\/\//i.test(url)) return url;
+
+    const { data } = supabase.storage.from(bucket).getPublicUrl(url);
+    return data?.publicUrl ?? null;
+};
+
+
 export const useShopStore = create((set, get) => ({
     // Estado inicial
     products: [],
+    categories: [],
     cart: [],
     coupons: [],
     selectedCategory: null,
@@ -88,16 +101,6 @@ export const useShopStore = create((set, get) => ({
             return;
         }
 
-        const PRODUCT_IMAGES_BUCKET = "product-images";
-
-        const toStorageUrl = (url, bucket) => {
-            if (!url) return null;
-            if (/^https?:\/\//i.test(url)) return url;
-
-            const { data } = supabase.storage.from(bucket).getPublicUrl(url);
-            return data?.publicUrl ?? null;
-        };
-
         // mapeo al componente 
         const mapped = (data ?? []).map((row) => {
             const images = (row.offer_carousel_images ?? []).map((img) => ({
@@ -165,6 +168,26 @@ export const useShopStore = create((set, get) => ({
         });
 
         set({ products: mapped, productsLoading: false });
+    },
+
+    loadCategories: async () => {
+        const { data, error } = await supabase
+            .from("categories")
+            .select(`category_id, category_name, category_img, category_img_hover, alt_text`)
+            .is("deleted_at", null)
+            .order("created_at", { ascending: false });
+
+        if (error) {
+            console.error("loadCategories:", error);
+            return [];
+        }
+
+        data.map((cat) => {
+            cat.category_img = toStorageUrl(cat.category_img, CATEGORY_IMAGES_BUCKET);
+            cat.category_img_hover = toStorageUrl(cat.category_img_hover, CATEGORY_IMAGES_BUCKET);
+        });
+
+        set({ categories: data ?? [] });
     },
 
     setCategory: (category) =>
