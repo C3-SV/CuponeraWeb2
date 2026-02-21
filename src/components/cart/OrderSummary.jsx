@@ -14,6 +14,7 @@ export const OrderSummary = () => {
 
   const handlePay = async () => {
     if (cart.length === 0) {
+      // Sweet Alert: Carrito Vacío
       await Swal.fire({
         title: "Carrito vacío",
         text: "Agregá al menos un producto para continuar.",
@@ -24,6 +25,7 @@ export const OrderSummary = () => {
 
     const check = await useShopStore.getState().validateCartAgainstDb();
     if (!check.ok) {
+      // Sweet Alert: No se puede comprar
       await Swal.fire({
         title: "No se puede comprar",
         html: `<ul style="text-align:left">${check.issues.map(i => `<li>${i}</li>`).join("")}</ul>`,
@@ -32,6 +34,7 @@ export const OrderSummary = () => {
       return;
     }
 
+    // Sweet Alert: Confirmar pago
     const confirm = await Swal.fire({
       title: "Confirmar pago",
       html: `
@@ -51,6 +54,7 @@ export const OrderSummary = () => {
     try {
       setLoading(true);
 
+      // Sweet Alert: Procesando pago
       Swal.fire({
         title: "Procesando pago...",
         allowOutsideClick: false,
@@ -82,6 +86,7 @@ export const OrderSummary = () => {
         
         await useShopStore.getState().loadMyCouponsFromSupabase();
 
+        // Sweet Alert: Pago exitoso
         Swal.close();
         await Swal.fire({
           title: "¡Pago exitoso!",
@@ -92,6 +97,7 @@ export const OrderSummary = () => {
         return;
       }
 
+      // Sweet Alert: Pago no completado
       Swal.close();
       await Swal.fire({
         title: "Pago no completado",
@@ -99,6 +105,7 @@ export const OrderSummary = () => {
         icon: "error",
       });
     } catch (e) {
+      // Sweet Alert: Error en el pago
       Swal.close();
       await Swal.fire({
         title: "Error técnico",
