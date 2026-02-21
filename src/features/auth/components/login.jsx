@@ -2,6 +2,7 @@ import { useState } from "react";
 import { loginUser } from "../authService";
 import { useNavigate, Navigate } from "react-router-dom";
 import { useAuthStore } from "../../../store/authStore";
+import Swal from "sweetalert2";
 import Input from "./Input";
 import Button from "./Button";
 
@@ -14,18 +15,34 @@ export default function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setMsg("Cargando...");
+    Swal.fire({
+      title: "Cargando...",
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: async () => {
+        Swal.showLoading();
 
     try {
       const res = await loginUser(email, password);
       console.log(res);
-      setMsg("Login exitoso");
+      Swal.fire({
+        icon: "success",
+        title: "¡Login exitoso!",
+        timer: 2000,
+        showConfirmButton: false
+      });
       navigate("/");
     } catch (err) {
       console.error(err);
-      setMsg(err.message);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: err.message
+      });
     }
-  };
+  }
+});
+};
 
    if (session) {
     return <Navigate to="/" replace />;

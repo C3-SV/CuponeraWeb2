@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "../../../lib/supabaseClient";
+import Swal from "sweetalert2";
 import Input from "./Input";
 import Button from "./Button";
 
@@ -11,25 +12,39 @@ export default function ForgotPassword() {
     const handleReset = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setMsg("");
 
-        try {
-            const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: `${window.location.origin}/recover-password`,
-            });
+        Swal.fire({
+            title: "Enviando...",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: async () => {
+                Swal.showLoading();
+                try {
+                    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                        redirectTo: `${window.location.origin}/recover-password`,
+                    });
 
-            if (error) throw error;
+                    if (error) throw error;
 
-            setMsg(
-                "Si el correo está registrado, recibirás un enlace para restablecer tu contraseña."
-            );
+                    Swal.fire({
+                        icon: "success",
+                        title: "¡Enlace enviado!",
+                        text: "Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.",
+                        confirmButtonText: "OK"
+                    });
 
-        } catch (err) {
-            console.error(err);
-            setMsg("Ocurrió un error. Intenta nuevamente.");
-        } finally {
-            setLoading(false);
-        }
+                } catch (err) {
+                    console.error(err);
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: "Ocurrió un error. Intenta nuevamente."
+                    });
+                } finally {
+                    setLoading(false);
+                }
+            }
+        });
     };
 
     return (

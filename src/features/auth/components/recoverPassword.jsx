@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../../lib/supabaseClient";
+import Swal from "sweetalert2";
 import Input from "./Input";
 import Button from "./Button";
 
@@ -14,29 +15,49 @@ export default function RecoverPassword() {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      setMsg("Las contraseñas no coinciden");
+      Swal.fire({
+        icon: "warning",
+        title: "Error",
+        text: "Las contraseñas no coinciden"
+      });
       return;
     }
 
-    setMsg("Actualizando...");
+    Swal.fire({
+      title: "Actualizando...",
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: async () => {
+        Swal.showLoading();
+        try {
+          const { error } = await supabase.auth.updateUser({
+            password: password,
+          });
 
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: password,
-      });
+          if (error) throw error;
 
-      if (error) throw error;
+          Swal.fire({
+            icon: "success",
+            title: "¡Éxito!",
+            text: "Contraseña actualizada correctamente",
+            timer: 2000,
+            showConfirmButton: false
+          });
 
-      setMsg("Contraseña actualizada correctamente");
+          setTimeout(() => {
+            navigate("/");
+          }, 2000);
 
-      setTimeout(() => {
-        navigate("/");
-      }, 2000);
-
-    } catch (err) {
-      console.error(err);
-      setMsg(err.message);
-    }
+        } catch (err) {
+          console.error(err);
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: err.message
+          });
+        }
+      }
+    });
   };
 
   return (
