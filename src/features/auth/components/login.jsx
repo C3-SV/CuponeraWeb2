@@ -73,7 +73,7 @@ export default function Login() {
 
           <p className="text-center text-sm">
             ¿Haz olvidado tu contraseña?{" "}
-            <a href="" className="text-blue-500 hover:underline"> 
+            <a href="/forgot-password" className="text-blue-500 hover:underline"> 
               Recuperarla aquí
             </a>
           </p>
