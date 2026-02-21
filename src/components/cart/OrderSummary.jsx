@@ -89,6 +89,8 @@ export const OrderSummary = () => {
           icon: "success",
         });
 
+        // si compra exitosa, limpiar carrito 
+        useShopStore.persist.clearStorage();
         return;
       }
 
