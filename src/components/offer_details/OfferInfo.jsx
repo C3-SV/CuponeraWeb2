@@ -15,11 +15,11 @@ export const OfferInfo = ({
 
             <div className="mt-3 flex items-end gap-3">
                 <p className="text-3xl tracking-tight font-heading text-primary font-bold">
-                    ${price}
+                    ${price.toFixed(2)}
                 </p>
                 {regularPrice && (
                     <p className="text-xl tracking-tight font-heading text-gray-500 line-through mb-0.5">
-                        ${regularPrice}
+                        ${regularPrice.toFixed(2)}
                     </p>
                 )}
             </div>
