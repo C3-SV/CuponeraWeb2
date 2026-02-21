@@ -22,6 +22,16 @@ export const OrderSummary = () => {
       return;
     }
 
+    const check = await useShopStore.getState().validateCartAgainstDb();
+    if (!check.ok) {
+      await Swal.fire({
+        title: "No se puede comprar",
+        html: `<ul style="text-align:left">${check.issues.map(i => `<li>${i}</li>`).join("")}</ul>`,
+        icon: "warning",
+      });
+      return;
+    }
+
     const confirm = await Swal.fire({
       title: "Confirmar pago",
       html: `
@@ -38,7 +48,6 @@ export const OrderSummary = () => {
     });
 
     if (!confirm.isConfirmed) return;
-
     try {
       setLoading(true);
 
@@ -66,7 +75,11 @@ export const OrderSummary = () => {
       if (r.ok && data?.ok && data?.status === "succeeded") {
         const paymentRef = data.paymentIntentId ?? null;
 
-        await useShopStore.getState().savePurchaseToSupabase({ paymentRef });
+        await useShopStore.getState().savePurchaseToSupabase({
+          paymentRef,
+          offersDb: check.offersDb, 
+        });
+        
         await useShopStore.getState().loadMyCouponsFromSupabase();
 
         Swal.close();

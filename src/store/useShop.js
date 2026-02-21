@@ -501,9 +501,48 @@ export const useShopStore = create((set, get) => ({
             };
         }),
 
-    // guardar compra en la base de datos 
+    // validar compra en base de datos 
+    validateCartAgainstDb: async () => {
+        const cart = get().cart;
+        if (!cart?.length) return { ok: false, issues: ["Carrito vacío"] };
 
-    savePurchaseToSupabase: async ({ paymentRef }) => {
+        const today = todayDateSupabaseFormat();
+        const ids = [...new Set(cart.map(i => i.id))];
+
+        const { data: rows, error } = await supabase
+            .from("offers")
+            .select("offer_id, offer_status, deleted_at, coupon_quantity_limit, coupon_usage_deadline, offer_end_date")
+            .in("offer_id", ids);
+
+        if (error) throw error;
+
+        const byId = new Map((rows ?? []).map(r => [r.offer_id, r]));
+        const issues = [];
+
+        for (const item of cart) {
+            const r = byId.get(item.id);
+            if (!r) {
+                issues.push(`Oferta no encontrada: ${item.name}`);
+                continue;
+            }
+
+            if (r.deleted_at) issues.push(`Oferta eliminada: ${item.name}`);
+            if (r.offer_status !== "APPROVED") issues.push(`Oferta no aprobada: ${item.name}`);
+
+            const stockDb = Number(r.coupon_quantity_limit ?? 0);
+            const qty = Math.max(1, Number(item.quantity) || 1);
+            if (stockDb < qty) issues.push(`Sin stock suficiente: ${item.name} (disp: ${stockDb}, pedís: ${qty})`);
+
+            const validUntil = (r.coupon_usage_deadline ?? r.offer_end_date);
+            const validUntilDate = validUntil ? String(validUntil).slice(0, 10) : null;
+            if (validUntilDate && validUntilDate < today) issues.push(`Oferta vencida: ${item.name} (venció: ${validUntilDate})`);
+        }
+
+        return { ok: issues.length === 0, issues, offersDb: rows ?? [] };
+    },
+
+    // guardar compra en la base de datos 
+    savePurchaseToSupabase: async ({ paymentRef, offersDb }) => {
         const cart = get().cart;
 
         if (!cart || cart.length === 0) throw new Error("Carrito vacío");
@@ -547,7 +586,7 @@ export const useShopStore = create((set, get) => ({
 
             if (itemsErr) throw itemsErr;
 
-            // 3) Insert coupons (1 fila por unidad)
+            // Insert coupons (1 fila por unidad)
             const couponsPayload = [];
             for (const row of itemRows) {
                 const original = cart.find((x) => x.id === row.offer_id);
@@ -579,7 +618,32 @@ export const useShopStore = create((set, get) => ({
             const { error: couponsErr } = await supabase.from("coupons").insert(couponsPayload);
             if (couponsErr) throw couponsErr;
 
-            // 4) limpiar carrito local
+            // cambiar y ajustar stock de ofertas 
+            const byId = new Map((offersDb ?? []).map(r => [r.offer_id, r]));
+
+            for (const item of cart) {
+                const r = byId.get(item.id);
+                if (!r) continue;
+
+                const oldStock = Number(r.coupon_quantity_limit ?? 0);
+                const qty = Math.max(1, Number(item.quantity) || 1);
+                const newStock = oldStock - qty;
+
+                // solo actualiza si el stock no cambió
+                const { data: updated, error: updErr } = await supabase
+                    .from("offers")
+                    .update({ coupon_quantity_limit: newStock })
+                    .eq("offer_id", item.id)
+                    .eq("coupon_quantity_limit", oldStock)
+                    .select("offer_id");
+
+                if (updErr) throw updErr;
+                if (!updated || updated.length === 0) {
+                    throw new Error(`Stock cambió mientras comprabas: ${item.name}. Reintentá.`);
+                }
+            }
+
+            // limpiar carrito local
             set({ cart: [] });
 
             return orderId;
