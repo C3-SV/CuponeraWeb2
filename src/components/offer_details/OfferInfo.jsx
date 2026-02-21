@@ -6,57 +6,35 @@ export const OfferInfo = ({
     regularPrice,
     stock,
     description,
-    businessName,
-    companyPhoto,
-    categoryName,
 }) => {
     return (
         <>
-            {/* Company info */}
-            {(businessName || companyPhoto || categoryName) && (
-                <div className="mb-4 flex items-center gap-3">
-                    {companyPhoto && (
-                        <img
-                            src={companyPhoto}
-                            alt={businessName ?? ""}
-                            className="h-14 w-24 p-2 rounded object-contain border border-gray-200"
-                        />
-                    )}
-                    <div>
-                        {businessName && (
-                            <p className="text-sm font-semibold text-gray-800">{businessName}</p>
-                        )}
-                        {categoryName && (
-                            <p className="text-xs text-gray-500">{categoryName}</p>
-                        )}
-                    </div>
-                </div>
-            )}
-
-            <h1 className="text-2xl font-semibold tracking-wider text-gray-900 font-heading">
+            <h1 className="text-3xl font-semibold tracking-wider text-gray-900 font-heading">
                 {title}
             </h1>
 
-            <div className="mt-3 flex items-center">
-                <p className="text-2xl tracking-tight font-heading text-gray-900">
+            <div className="mt-3 flex items-end gap-3">
+                <p className="text-3xl tracking-tight font-heading text-primary font-bold">
                     ${price}
                 </p>
                 {regularPrice && (
-                    <p className="ml-3 text-lg tracking-tight font-heading text-primary line-through">
+                    <p className="text-xl tracking-tight font-heading text-gray-500 line-through mb-0.5">
                         ${regularPrice}
                     </p>
                 )}
             </div>
 
-            <div className="mt-3">
-                <p className="text-sm text-gray-800">
-                    <span className="font-heading font-bold">Stock: </span>
+            <div className="mt-4">
+                <p className="text-sm text-gray-800 bg-gray-100 inline-block px-3 py-1 rounded-md">
+                    <span className="font-heading font-bold text-gray-600">
+                        Stock:{" "}
+                    </span>
                     {stock} unidades disponibles
                 </p>
             </div>
 
             <div className="mt-6">
-                <div className="space-y-4 text-md text-gray-700">
+                <div className="space-y-4 text-md text-gray-700 leading-relaxed">
                     <p>{description}</p>
                 </div>
             </div>
