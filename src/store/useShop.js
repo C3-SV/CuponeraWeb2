@@ -276,9 +276,15 @@ export const useShopStore = create((set, get) => ({
     loadEndingSoon: async () => {
         set({ productsLoading: true, productsError: null });
 
-        // Consultamos directo a la vista de los que expiran pronto
+        const today = new Date();
+        const nextWeek = new Date();
+        nextWeek.setDate(today.getDate() + 7);
+
+        const todayStr = today.toISOString().split("T")[0];
+        const nextWeekStr = nextWeek.toISOString().split("T")[0];
+
         const { data, error } = await supabase
-            .from("ofertas_por_terminar")
+            .from("offers")
             .select(`
                 offer_id, offer_title, offer_description, offer_regular_price, offer_price,
                 offer_start_date, offer_end_date, coupon_usage_deadline, coupon_quantity_limit,
@@ -286,7 +292,12 @@ export const useShopStore = create((set, get) => ({
                 company:companies ( company_id, company_name, company_photo, deleted_at, category_id:categories ( category_id, category_name, category_img ) ),
                 offer_carousel_images ( offer_carousel_image_id, image_url, image_alt_text, image_sort_order, main_image, deleted_at ),
                 offer_list_details ( offer_list_detail_id, item_title, item_description, item_sort_order, deleted_at )
-            `);
+            `)
+            .is("deleted_at", null)
+            .eq("offer_status", "APPROVED")
+            .gte("offer_end_date", todayStr)
+            .lte("offer_end_date", nextWeekStr)
+            .order("offer_end_date", { ascending: false });
 
         if (error) {
             console.error("loadEndingSoon:", error);
@@ -303,6 +314,8 @@ export const useShopStore = create((set, get) => ({
                 sortOrder: img.image_sort_order,
             }));
             const mainImage = images.find((img) => img.isMain)?.url ?? images[0]?.url ?? null;
+            const validUntil = row.coupon_usage_deadline ?? row.offer_end_date ?? null;
+            const businessName = row.company?.deleted_at ? "—" : (row.company?.company_name ?? "—");
 
             return {
                 id: row.offer_id,
@@ -312,12 +325,12 @@ export const useShopStore = create((set, get) => ({
                 regularPrice: Number(row.offer_regular_price ?? 0),
                 startDate: row.offer_start_date,
                 endDate: row.offer_end_date,
-                validUntil: row.coupon_usage_deadline ?? row.offer_end_date ?? null,
-                expiresAt: row.coupon_usage_deadline ?? row.offer_end_date ?? null,
+                validUntil,
+                expiresAt: validUntil,
                 stock: Number(row.coupon_quantity_limit ?? 0),
                 status: row.offer_status,
                 companyId: row.company_id,
-                businessName: row.company?.deleted_at ? "—" : (row.company?.company_name ?? "—"),
+                businessName,
                 companyPhoto: row.company?.company_photo ?? null,
                 images,
                 mainImage
@@ -337,6 +350,77 @@ export const useShopStore = create((set, get) => ({
         return products.filter(
             (product) => product.category === selectedCategory
         );
+    },
+
+    getOfferById: async (offerId) => {
+        const { data, error } = await supabase
+            .from("offers")
+            .select(`
+                offer_id, offer_title, offer_description, offer_regular_price, offer_price,
+                offer_start_date, offer_end_date, coupon_usage_deadline, coupon_quantity_limit,
+                offer_status, company_id, deleted_at,
+                company:companies (
+                    company_id, company_name, company_photo, deleted_at,
+                    category_id:categories ( category_id, category_name )
+                ),
+                offer_carousel_images ( offer_carousel_image_id, image_url, image_alt_text, image_sort_order, main_image, deleted_at ),
+                offer_list_details ( offer_list_detail_id, item_title, item_description, item_sort_order, deleted_at )
+            `)
+            .eq("offer_id", offerId)
+            .is("deleted_at", null)
+            .eq("offer_status", "APPROVED")
+            .maybeSingle();
+
+        if (error || !data) {
+            console.error("fetchOfferById:", error || "Oferta no encontrada o inactiva");
+            return null;
+        }
+
+        const images = (data.offer_carousel_images ?? []).map((img) => ({
+            id: img.offer_carousel_image_id,
+            url: toStorageUrl(img.image_url, PRODUCT_IMAGES_BUCKET),
+            alt: img.image_alt_text,
+            isMain: img.main_image,
+            sortOrder: img.image_sort_order,
+        }));
+
+        const mainImage = images.find((img) => img.isMain)?.url ?? images[0]?.url ?? null;
+
+        const details = (data.offer_list_details ?? [])
+            .filter((d) => !d.deleted_at)
+            .sort((a, b) => (a.item_sort_order ?? 1) - (b.item_sort_order ?? 1))
+            .map((d) => ({
+                id: d.offer_list_detail_id,
+                title: d.item_title,
+                description: d.item_description,
+                order: d.item_sort_order ?? 1,
+            }));
+
+        const businessName = data.company?.deleted_at ? "—" : (data.company?.company_name ?? "—");
+        const companyPhoto = toStorageUrl(data.company?.company_photo ?? null, COMPANY_LOGOS_BUCKET);
+        const categoryName = data.company?.category_id?.category_name ?? null;
+        const validUntil = data.coupon_usage_deadline ?? data.offer_end_date ?? null;
+
+        return {
+            id: data.offer_id,
+            name: data.offer_title,
+            description: data.offer_description,
+            price: Number(data.offer_price ?? 0),
+            regularPrice: Number(data.offer_regular_price ?? 0),
+            startDate: data.offer_start_date,
+            endDate: data.offer_end_date,
+            validUntil,
+            expiresAt: validUntil,
+            stock: Number(data.coupon_quantity_limit ?? 0),
+            status: data.offer_status,
+            companyId: data.company_id,
+            businessName,
+            companyPhoto,
+            categoryName,
+            images,
+            mainImage,
+            details,
+        };
     },
 
     // Acciones del carrito 
