@@ -1,6 +1,8 @@
 import React from "react";
 import Login from "../components/login";
 import Register from "../components/register";
+import RecoverPassword from "../components/recoverPassword";
+import ForgotPassword from "../components/forgotPassword";
 
 const Page = ({ title }) => (
   <div className="max-w-5xl mx-auto px-4 py-10">
@@ -11,4 +13,6 @@ const Page = ({ title }) => (
 export const authRoutes = [
   { path: "login", element: <Login/> },
   { path: "register", element: <Register/> },
+  { path: "recover-password", element: <RecoverPassword/> },
+  { path: "forgot-password", element: <ForgotPassword/> },
 ];
