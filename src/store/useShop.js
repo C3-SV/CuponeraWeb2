@@ -31,6 +31,7 @@ const computeStatus = ({ validUntil, redeemedAt }) => {
 
 const PRODUCT_IMAGES_BUCKET = "product-images";
 const CATEGORY_IMAGES_BUCKET = "categories-icons";
+const COMPANY_LOGOS_BUCKET = "companies-logos";
 
 const toStorageUrl = (url, bucket) => {
     if (!url) return null;
@@ -150,10 +151,17 @@ export const useShopStore = create((set, get) => ({
             const businessName =
                 row.company?.deleted_at ? "—" : (row.company?.company_name ?? "—");
 
+            const companyPhoto = toStorageUrl(
+                row.company?.company_photo ?? null,
+                COMPANY_LOGOS_BUCKET
+            );
+
+            const categoryName = row.company?.category_id?.category_name ?? null;
+
             const validUntil = row.coupon_usage_deadline ?? row.offer_end_date ?? null;
 
             return {
-                // campos compatibles con el componente 
+                // campos compatibles con el componente
                 id: row.offer_id,
                 name: row.offer_title,
                 description: row.offer_description,
@@ -171,7 +179,8 @@ export const useShopStore = create((set, get) => ({
 
                 companyId: row.company_id,
                 businessName,
-                companyPhoto: row.company?.company_photo ?? null,
+                companyPhoto,
+                categoryName,
 
                 images,
                 mainImage: mainImage,

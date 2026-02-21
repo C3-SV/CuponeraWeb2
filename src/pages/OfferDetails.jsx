@@ -19,7 +19,7 @@ export const OfferDetails = () => {
     // Lógica de búsqueda (igual que antes)
     const offer = products.find((p) => p.id === id);
     const relatedOffers = products.filter(
-        (p) => p.category === offer?.category && p.id !== offer?.id,
+        (p) => p.categoryName === offer?.categoryName && p.id !== offer?.id,
     );
 
     if (!offer)
@@ -29,7 +29,6 @@ export const OfferDetails = () => {
     const displayOffer = {
         ...offer,
         title: offer.name,
-        categoryName: offer.categoryName?.toUpperCase(),
     };
 
     return (
@@ -50,6 +49,9 @@ export const OfferDetails = () => {
                                 regularPrice={displayOffer.regularPrice}
                                 stock={displayOffer.stock}
                                 description={displayOffer.description}
+                                businessName={offer.businessName}
+                                companyPhoto={offer.companyPhoto}
+                                categoryName={offer.categoryName}
                             />
 
                             <CartForm
