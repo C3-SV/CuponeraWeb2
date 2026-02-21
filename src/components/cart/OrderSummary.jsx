@@ -16,7 +16,6 @@ export const OrderSummary = () => {
 
   const handlePay = async () => {
     if (cart.length === 0) return;
-
     try {
       setLoading(true);
 
@@ -31,13 +30,15 @@ export const OrderSummary = () => {
       const data = await r.json();
 
       if (data.ok && data.status === "succeeded") {
-        finalizePurchase();
+         const paymentRef = data.paymentIntentId ?? null;
+        await useShopStore.getState().savePurchaseToSupabase({ paymentRef });
+        await useShopStore.getState().loadMyCouponsFromSupabase(); // la hacemos abajo
         return;
       }
 
       alert("Pago no completado.");
     } catch (e) {
-      alert("Error técnico llamando al backend.");
+      alert("Error técnico llamando al backend." + e?.message);
     } finally {
       setLoading(false);
     }

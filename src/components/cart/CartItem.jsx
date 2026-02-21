@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useShopStore } from "../../store/useShop";
 
 export const CartItem = ({ item }) => {
-    console.log("CART ITEM RENDER:", item);
+    //console.log("CART ITEM RENDER:", item);
     const removeFromCart = useShopStore((state) => state.removeFromCart);
     const updateQuantity = useShopStore((state) => state.updateQuantity);
 

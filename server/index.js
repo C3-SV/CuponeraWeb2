@@ -33,7 +33,13 @@ app.post("/pay", async (req, res) => {
     });
 
     // Frontend necesita:
-    return res.json({ ok: true, status: pi.status });
+    return res.json({ 
+      ok: true, 
+      status: pi.status,
+      paymentIntentId: pi.id,
+      amount: pi.amount,
+      currency: pi.currency
+    });
   } catch (err) {
 
     return res.status(500).json({

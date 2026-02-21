@@ -40,9 +40,9 @@ const mockCoupons = [
 
 export const Coupons = () => {
     const coupons = useShopStore((s) => s.coupons);
-    const refresh = useShopStore((s) => s.refreshCouponStatuses);
+    const load = useShopStore((s) => s.loadMyCouponsFromSupabase);
 
-    useEffect(() => { refresh(); }, []);
+    useEffect(() => { load(); }, []);
 
     const [active, setActive] = useState("available");
 
