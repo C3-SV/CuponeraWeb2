@@ -31,6 +31,7 @@ export const CartItem = ({ item }) => {
     const incQty = () => commitQty((Number(qty) || 1) + 1);
 
     const confirmRemove = async () => {
+        // Sweet Alert: Eliminar del carrito
         const r = await Swal.fire({
             title: "¿Eliminar del carrito?",
             text: item.name || "Este producto",
@@ -42,6 +43,7 @@ export const CartItem = ({ item }) => {
 
         if (r.isConfirmed) {
             removeFromCart(item.id);
+            // Sweet Alert: Producto eliminado del carrito
             Swal.fire({
                 title: "Eliminado",
                 icon: "success",
@@ -56,7 +58,7 @@ export const CartItem = ({ item }) => {
             {/* Imagen */}
             <div className="shrink-0">
                 <img
-                    src={item.imageUrl || item.images?.[0]}
+                    src={item.mainImage || item.images?.[0]?.url || null}
                     alt={item.name}
                     className="size-24 rounded-md object-cover sm:size-48"
                 />
@@ -95,18 +97,26 @@ export const CartItem = ({ item }) => {
                                     onClick={decQty}
                                     className="size-10 grid place-items-center hover:bg-gray-50 transition"
                                 >
-                                    <span className="text-xl leading-none">−</span>
+                                    <span className="text-xl leading-none">
+                                        −
+                                    </span>
                                 </button>
 
                                 <input
                                     value={qty}
                                     onChange={(e) => {
-                                        const val = e.target.value.replace(/[^\d]/g, "");
+                                        const val = e.target.value.replace(
+                                            /[^\d]/g,
+                                            "",
+                                        );
                                         if (val === "") {
                                             setQty("");
                                             return;
                                         }
-                                        const next = Math.max(1, Math.min(max, Number(val)));
+                                        const next = Math.max(
+                                            1,
+                                            Math.min(max, Number(val)),
+                                        );
                                         setQty(String(next));
                                     }}
                                     onBlur={() => {
@@ -120,7 +130,9 @@ export const CartItem = ({ item }) => {
                                     onClick={incQty}
                                     className="size-10 grid place-items-center bg-primary text-white hover:bg-primary-hover transition"
                                 >
-                                    <span className="text-xl leading-none">+</span>
+                                    <span className="text-xl leading-none">
+                                        +
+                                    </span>
                                 </button>
                             </div>
                         </div>

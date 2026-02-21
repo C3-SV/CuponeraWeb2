@@ -4,19 +4,17 @@ import { useShopStore } from "../../store/useShop";
 
 export const OrderSummary = () => {
   const cart = useShopStore((state) => state.cart);
-  // para terminar compra
-  const finalizePurchase = useShopStore((s) => s.finalizePurchase);
-
   // Cálculos dinámicos
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const serviceFee = 8.32; // se puede hacer mas dinámico (ej: subtotal * 0.05)
   const total = subtotal + serviceFee;
 
   const [loading, setLoading] = useState(false);
-  const API = import.meta.env.VITE_API_BASE_URL || "http://localhost:4242";
+  const FUNCTIONS_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
   const handlePay = async () => {
     if (cart.length === 0) {
+      // Sweet Alert: Carrito Vacío
       await Swal.fire({
         title: "Carrito vacío",
         text: "Agregá al menos un producto para continuar.",
@@ -25,6 +23,18 @@ export const OrderSummary = () => {
       return;
     }
 
+    const check = await useShopStore.getState().validateCartAgainstDb();
+    if (!check.ok) {
+      // Sweet Alert: No se puede comprar
+      await Swal.fire({
+        title: "No se puede comprar",
+        html: `<ul style="text-align:left">${check.issues.map(i => `<li>${i}</li>`).join("")}</ul>`,
+        icon: "warning",
+      });
+      return;
+    }
+
+    // Sweet Alert: Confirmar pago
     const confirm = await Swal.fire({
       title: "Confirmar pago",
       html: `
@@ -41,10 +51,10 @@ export const OrderSummary = () => {
     });
 
     if (!confirm.isConfirmed) return;
-
     try {
       setLoading(true);
 
+      // Sweet Alert: Procesando pago
       Swal.fire({
         title: "Procesando pago...",
         allowOutsideClick: false,
@@ -53,7 +63,7 @@ export const OrderSummary = () => {
 
       const amountCents = Math.round(total * 100);
 
-      const r = await fetch(`${API}/pay`, {
+      const r = await fetch(`${FUNCTIONS_BASE}/.netlify/functions/pay`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amountCents, cart }),
@@ -69,9 +79,14 @@ export const OrderSummary = () => {
       if (r.ok && data?.ok && data?.status === "succeeded") {
         const paymentRef = data.paymentIntentId ?? null;
 
-        await useShopStore.getState().savePurchaseToSupabase({ paymentRef });
+        await useShopStore.getState().savePurchaseToSupabase({
+          paymentRef,
+          offersDb: check.offersDb, 
+        });
+        
         await useShopStore.getState().loadMyCouponsFromSupabase();
 
+        // Sweet Alert: Pago exitoso
         Swal.close();
         await Swal.fire({
           title: "¡Pago exitoso!",
@@ -79,9 +94,12 @@ export const OrderSummary = () => {
           icon: "success",
         });
 
+        // si compra exitosa, limpiar carrito 
+        useShopStore.persist.clearStorage();
         return;
       }
 
+      // Sweet Alert: Pago no completado
       Swal.close();
       await Swal.fire({
         title: "Pago no completado",
@@ -89,6 +107,7 @@ export const OrderSummary = () => {
         icon: "error",
       });
     } catch (e) {
+      // Sweet Alert: Error en el pago
       Swal.close();
       await Swal.fire({
         title: "Error técnico",

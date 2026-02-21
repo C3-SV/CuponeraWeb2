@@ -56,12 +56,12 @@ export const OfferCard = ({ product }) => {
 
                     <div className="flex items-center gap-2">
                         <span className="text-lg font-bold text-red-600">
-                            ${price}
+                            ${price.toFixed(2)}
                         </span>
 
                         {hasDiscount && (
                             <span className="text-xs text-muted line-through">
-                                ${regularPrice}
+                                ${regularPrice.toFixed(2)}
                             </span>
                         )}
                     </div>

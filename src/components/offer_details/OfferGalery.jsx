@@ -1,16 +1,16 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 
-export const OfferGalery = ({ images = [], title }) => {
-    // Normalise: accept both raw URL strings and {url, alt} objects
+export const OfferGalery = React.memo(({ images = [], title }) => {
     const normalised = images.map((img) =>
-        typeof img === "string" ? { url: img, alt: "" } : img
+        typeof img === "string" ? { url: img, alt: "" } : img,
     );
 
     const [selectedIndex, setSelectedIndex] = useState(0);
 
-    // ====== Carousel mobile logic ======
     const mobileCarouselRef = useRef(null);
     const isProgrammaticScroll = useRef(false);
+
+    const timeoutRef = useRef(null);
 
     function scrollContainerToIndex(i) {
         const el = mobileCarouselRef.current;
@@ -21,17 +21,23 @@ export const OfferGalery = ({ images = [], title }) => {
     function scrollToIndex(i) {
         isProgrammaticScroll.current = true;
         setSelectedIndex(i);
-        setTimeout(() => {
+
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+        timeoutRef.current = setTimeout(() => {
             isProgrammaticScroll.current = false;
         }, 600);
     }
 
     function prevImage() {
-        const next = (selectedIndex - 1 + normalised.length) % normalised.length;
+        if (isProgrammaticScroll.current) return;
+        const next =
+            (selectedIndex - 1 + normalised.length) % normalised.length;
         scrollToIndex(next);
     }
 
     function nextImage() {
+        if (isProgrammaticScroll.current) return;
         const next = (selectedIndex + 1) % normalised.length;
         scrollToIndex(next);
     }
@@ -39,6 +45,12 @@ export const OfferGalery = ({ images = [], title }) => {
     useEffect(() => {
         scrollContainerToIndex(selectedIndex);
     }, [selectedIndex]);
+
+    useEffect(() => {
+        return () => {
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        };
+    }, []);
 
     function handleMobileScroll(e) {
         if (isProgrammaticScroll.current) return;
@@ -61,7 +73,6 @@ export const OfferGalery = ({ images = [], title }) => {
 
     return (
         <div className="flex flex-col-reverse">
-            {/* Thumbnails (Desktop) */}
             <div className="mx-auto mt-5 hidden w-full max-w-2xl sm:block lg:max-w-none">
                 <div className="grid grid-cols-4 gap-4">
                     {normalised.map((img, i) => (
@@ -91,9 +102,7 @@ export const OfferGalery = ({ images = [], title }) => {
                 </div>
             </div>
 
-            {/* Main Image & Mobile Carousel */}
             <div className="w-full">
-                {/* Desktop View */}
                 <div className="bg-surface rounded-lg p-4 sm:p-6 hidden sm:block">
                     <img
                         src={normalised[selectedIndex]?.url}
@@ -102,7 +111,6 @@ export const OfferGalery = ({ images = [], title }) => {
                     />
                 </div>
 
-                {/* Mobile Carousel View */}
                 <div className="mt-4 sm:hidden">
                     <div className="relative">
                         {normalised.length > 1 && (
@@ -166,7 +174,6 @@ export const OfferGalery = ({ images = [], title }) => {
                             ))}
                         </div>
                     </div>
-                    {/* Dots */}
                     <div className="mt-3 flex justify-center gap-2">
                         {normalised.map((_, i) => (
                             <button
@@ -180,4 +187,4 @@ export const OfferGalery = ({ images = [], title }) => {
             </div>
         </div>
     );
-};
+});

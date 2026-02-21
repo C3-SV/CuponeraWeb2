@@ -9,7 +9,9 @@ export const FiltersLayout = ({
     endDate,
     setEndDate,
     rubrosOptions,
-    onApply, // Nueva prop para ejecutar la acción
+    selectedRubros,
+    onRubroChange,
+    onClear,
 }) => {
     const handleSliderChange = (newValue) => {
         setPriceRange((prev) => ({
@@ -25,6 +27,8 @@ export const FiltersLayout = ({
                 title="Rubros"
                 defaultOpen={true}
                 options={rubrosOptions}
+                selectedValues={selectedRubros}
+                onOptionChange={onRubroChange}
             />
 
             {/* 2. Precio */}
@@ -67,30 +71,14 @@ export const FiltersLayout = ({
                 />
             </FilterSection>
 
-            {/* --- BOTÓN DE APLICAR --- */}
-            <div className="pt-6 flex flex-col items-center lg:items-stretch">
-                {/* Contenedor con max-w en mobile para que no sea gigante */}
-                <div className="w-full max-w-50 lg:max-w-none">
-                    <button
-                        type="button"
-                        onClick={onApply}
-                        className="flex w-full items-center justify-center rounded-lg border border-transparent bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-primary-hover focus:outline-none focus:ring-2 focus:primary focus:ring-offset-2 transition-all active:scale-95 font-heading tracking-wide"
-                    >
-                        Aplicar Filtros
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setPriceRange({ min: 0, max: 5000 });
-                            setEndDate("");
-                        }}
-                        className="mt-3 flex w-full items-center justify-center px-4 py-2 text-sm font-medium font-heading tracking-wide text-gray-400 hover:text-primary transition-colors"
-                    >
-                        Limpiar filtros
-                    </button>
-                </div>
-            </div>
+            {/* --- BOTÓN LIMPIAR --- */}
+            <button
+                type="button"
+                onClick={onClear}
+                className="flex w-full items-center justify-center px-4 py-2 text-sm font-medium font-heading tracking-wide text-gray-400 hover:text-primary transition-colors"
+            >
+                Limpiar filtros
+            </button>
         </div>
     );
 };
