@@ -1,13 +1,29 @@
-import { useRef } from "react";
-import { OfferCard } from "../offers/OfferCard"; // Ajusta la ruta si es necesario
+import { useEffect, useRef, useState } from "react";
+import { useShopStore } from "../../store/useShop";
+import { OfferCard } from "../offers/OfferCard";
 
-export const EndingSoonSection = ({ offers, onAddToCart }) => {
+export const EndingSoonSection = ({ isLoading }) => {
+    const endingSoonOffers = useShopStore((s) => s.endingSoonOffers);
+    const addToCart = useShopStore((s) => s.addToCart);
+
+    const [showButtons, setShowButtons] = useState(false);
     const scrollerRef = useRef(null);
 
-    // Si no hay ofertas, no mostramos nada
-    if (!offers || offers.length === 0) return null;
+    const checkOverflow = () => {
+        if (scrollerRef.current) {
+            const { scrollWidth, clientWidth } = scrollerRef.current;
+            setShowButtons(scrollWidth > clientWidth);
+        }
+    };
 
-    // Cantidad de px a desplazar
+    useEffect(() => {
+        if (!isLoading) {
+            checkOverflow();
+        }
+        window.addEventListener("resize", checkOverflow);
+        return () => window.removeEventListener("resize", checkOverflow);
+    }, [endingSoonOffers, isLoading]);
+
     const step = 320;
 
     const scrollByDir = (dir) => {
@@ -19,7 +35,6 @@ export const EndingSoonSection = ({ offers, onAddToCart }) => {
     return (
         <section className="mt-16 mb-12">
             <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                {/* Header Unificado (Estilo Categorías) */}
                 <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
                     <div>
                         <div className="flex items-center gap-3">
@@ -33,56 +48,76 @@ export const EndingSoonSection = ({ offers, onAddToCart }) => {
                         </h2>
                     </div>
 
-                    {/* Controles de Navegación (Visibles siempre) */}
-                    <div className="mx-auto sm:mx-0 flex items-center gap-2">
-                        <button
-                            onClick={() => scrollByDir(-1)}
-                            className="grid h-10 w-10 place-items-center rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 active:scale-95 transition"
-                            aria-label="Anterior"
-                        >
-                            <ArrowLeftIcon className="size-5" />
-                        </button>
-                        <button
-                            onClick={() => scrollByDir(1)}
-                            className="grid h-10 w-10 place-items-center rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 active:scale-95 transition"
-                            aria-label="Siguiente"
-                        >
-                            <ArrowRightIcon className="size-5" />
-                        </button>
-                    </div>
-                </div>
-
-                {/* Contenedor del Carrusel */}
-                <div className="relative -mx-6 px-6 lg:mx-0 lg:px-0">
-                    <div
-                        ref={scrollerRef}
-                        className="
-                            flex gap-6 overflow-x-auto scroll-smooth pb-8 pt-2
-                            [scrollbar-width:none] [-ms-overflow-style:none]
-                        "
-                    >
-                        {/* Ocultar scrollbar en Chrome/Safari */}
-                        <style>{`div::-webkit-scrollbar { display: none; }`}</style>
-
-                        {offers.map((product) => (
-                            <div
-                                key={product.id}
-                                className="min-w-70 w-70 md:min-w-[320px] md:w-[320px] shrink-0"
-                            >
-                                <OfferCard
-                                    product={product}
-                                    onAddToCart={() => onAddToCart(product)}
-                                />
+                    {showButtons &&
+                        !isLoading &&
+                        endingSoonOffers?.length > 0 && (
+                            <div className="mx-auto sm:mx-0 flex items-center gap-2 transition-opacity duration-300">
+                                <button
+                                    onClick={() => scrollByDir(-1)}
+                                    className="grid h-10 w-10 place-items-center rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 active:scale-95 transition"
+                                    aria-label="Anterior"
+                                >
+                                    <ArrowLeftIcon className="size-5" />
+                                </button>
+                                <button
+                                    onClick={() => scrollByDir(1)}
+                                    className="grid h-10 w-10 place-items-center rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 active:scale-95 transition"
+                                    aria-label="Siguiente"
+                                >
+                                    <ArrowRightIcon className="size-5" />
+                                </button>
                             </div>
-                        ))}
-                    </div>
+                        )}
                 </div>
+
+                {isLoading ? (
+                    <div className="relative -mx-6 px-6 lg:mx-0 lg:px-0">
+                        <div className="flex gap-6 overflow-hidden pb-8 pt-2">
+                            {Array.from({ length: 4 }).map((_, i) => (
+                                <div
+                                    key={`skeleton-ending-${i}`}
+                                    className="min-w-70 w-70 md:min-w-[320px] md:w-[320px] shrink-0 h-100 bg-gray-100 rounded-xl animate-pulse"
+                                />
+                            ))}
+                        </div>
+                    </div>
+                ) : endingSoonOffers && endingSoonOffers.length > 0 ? (
+                    <div className="relative -mx-6 px-6 lg:mx-0 lg:px-0">
+                        <div
+                            ref={scrollerRef}
+                            className="flex gap-6 overflow-x-auto scroll-smooth pb-8 pt-2 [scrollbar-width:none] [-ms-overflow-style:none]"
+                        >
+                            <style>{`div::-webkit-scrollbar { display: none; }`}</style>
+                            {endingSoonOffers.map((product) => (
+                                <div
+                                    key={product.id}
+                                    className="min-w-70 w-70 md:min-w-[320px] md:w-[320px] shrink-0"
+                                >
+                                    <OfferCard
+                                        product={product}
+                                        onAddToCart={() => addToCart(product)}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex flex-col items-center justify-center py-16 px-4 text-center bg-gray-50 rounded-2xl border border-gray-100 dash-border">
+                        <p className="mt-4 text-lg font-medium text-gray-900">
+                            ¡Tienes tiempo de sobra!
+                        </p>
+                        <p className="mt-2 text-sm text-gray-500 max-w-sm">
+                            Por el momento, ninguna de nuestras ofertas
+                            principales está próxima a vencer. Explora con
+                            calma.
+                        </p>
+                    </div>
+                )}
             </div>
         </section>
     );
 };
 
-/* --- Iconos Flechas --- */
 function ArrowLeftIcon(props) {
     return (
         <svg viewBox="0 0 24 24" fill="currentColor" {...props}>

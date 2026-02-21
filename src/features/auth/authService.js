@@ -16,7 +16,7 @@ export const registerUser = async (email, password, name, lastname, phone, dui, 
     },
   });
 
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return data;
 };
 
@@ -27,12 +27,12 @@ export const loginUser = async (email, password) => {
     password,
   });
 
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return data;
 };
 
 //logout
 export const logoutUser = async () => {
   const { error } = await supabase.auth.signOut();
-  if (error) throw error;
+  if (error) throw new Error(error.message);
 };

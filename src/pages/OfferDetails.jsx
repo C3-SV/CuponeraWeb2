@@ -1,4 +1,6 @@
-import { useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
+import { useParams } from "react-router-dom";
+import { useShopStore } from "../store/useShop";
 
 import { OfferGalery } from "../components/offer_details/OfferGalery";
 import { OfferInfo } from "../components/offer_details/OfferInfo";
@@ -6,42 +8,85 @@ import { CartForm } from "../components/offer_details/CartForm";
 import { OfferDetailsTable } from "../components/offer_details/OfferDetailsTable";
 import { RelatedOffers } from "../components/offer_details/RelatedOffers";
 
-import { useShopStore } from "../store/useShop";
-import { useParams } from "react-router-dom";
-
 export const OfferDetails = () => {
     const { id } = useParams();
 
-    // Usamos Zustand para obtener datos y la acción
+    const getOfferById = useShopStore((state) => state.getOfferById);
+    const loadOffers = useShopStore((state) => state.loadOffers);
     const products = useShopStore((state) => state.products);
     const addToCart = useShopStore((state) => state.addToCart);
 
-    // Lógica de búsqueda (igual que antes)
-    const offer = products.find((p) => p.id === id);
-    const relatedOffers = products.filter(
-        (p) => p.category === offer?.category && p.id !== offer?.id,
+    const [offer, setOffer] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchCurrentOffer = async () => {
+            setIsLoading(true);
+            const fetchedOffer = await getOfferById(id);
+            setOffer(fetchedOffer);
+
+            if (products.length === 0) {
+                await loadOffers();
+            }
+
+            setIsLoading(false);
+        };
+
+        fetchCurrentOffer();
+    }, [id]);
+
+    const relatedOffers = useMemo(() => {
+        if (!offer || products.length === 0) return [];
+        return products
+            .filter(
+                (p) =>
+                    p.categoryName === offer.categoryName && p.id !== offer.id,
+            )
+            .slice(0, 4);
+    }, [products, offer]);
+
+    const displayOffer = useMemo(() => {
+        if (!offer) return null;
+        return {
+            ...offer,
+            title: offer.name,
+        };
+    }, [offer]);
+
+    const handleAddToCart = useCallback(
+        (qty) => {
+            if (offer) addToCart(offer, qty);
+        },
+        [offer, addToCart],
     );
 
-    if (!offer)
-        return <div className="p-10 text-center">Producto no encontrado</div>;
+    const handleAddRelatedToCart = useCallback(
+        (p) => {
+            addToCart(p, 1);
+        },
+        [addToCart],
+    );
 
-    // Adaptador de datos
-    const displayOffer = {
-        ...offer,
-        title: offer.name,
-        categoryName: offer.categoryName?.toUpperCase(),
-    };
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center min-h-[50vh]">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
 
-    // ====== HANDLERS ======
-    const handleAddToCart = (qty) => {
-        console.log("Add to cart principal:", { offerId: offer.id, qty });
-        addToCart(offer, qty);
-    };
-
-    const handleRelatedAddToCart = (product) => {
-        console.log("Add related:", product);
-        addToCart(product, 1);
-    };
+    if (!offer) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
+                <h2 className="text-2xl font-bold text-gray-800">
+                    Producto no encontrado
+                </h2>
+                <p className="text-gray-500 mt-2">
+                    Es posible que esta oferta ya no esté disponible.
+                </p>
+            </div>
+        );
+    }
 
     return (
         <>
@@ -58,7 +103,7 @@ export const OfferDetails = () => {
                             <OfferInfo
                                 title={displayOffer.title}
                                 price={displayOffer.price}
-                                oldPrice={displayOffer.oldPrice}
+                                regularPrice={displayOffer.regularPrice}
                                 stock={displayOffer.stock}
                                 description={displayOffer.description}
                             />
@@ -66,7 +111,9 @@ export const OfferDetails = () => {
                             <CartForm
                                 stock={displayOffer.stock}
                                 categoryName={displayOffer.categoryName}
-                                onAddToCart={(qty) => addToCart(offer, qty)}
+                                businessName={offer.businessName}
+                                companyPhoto={offer.companyPhoto}
+                                onAddToCart={handleAddToCart}
                             />
 
                             <OfferDetailsTable details={offer.details || []} />
@@ -75,7 +122,7 @@ export const OfferDetails = () => {
 
                     <RelatedOffers
                         offers={relatedOffers}
-                        onAddToCart={(p) => addToCart(p, 1)}
+                        onAddToCart={handleAddRelatedToCart}
                     />
                 </div>
             </div>

@@ -101,7 +101,7 @@ export const RedeemCoupon = () => {
 
           <div className="mt-8 flex gap-3">
             <Link
-              to="/mis-cupones"
+              to="/coupons"
               className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover transition"
             >
               Ir a Mis Cupones

@@ -1,11 +1,16 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 
-export const OfferGalery = ({ images, title }) => {
+export const OfferGalery = React.memo(({ images = [], title }) => {
+    const normalised = images.map((img) =>
+        typeof img === "string" ? { url: img, alt: "" } : img,
+    );
+
     const [selectedIndex, setSelectedIndex] = useState(0);
 
-    // ====== Carousel mobile logic ======
     const mobileCarouselRef = useRef(null);
     const isProgrammaticScroll = useRef(false);
+
+    const timeoutRef = useRef(null);
 
     function scrollContainerToIndex(i) {
         const el = mobileCarouselRef.current;
@@ -16,24 +21,36 @@ export const OfferGalery = ({ images, title }) => {
     function scrollToIndex(i) {
         isProgrammaticScroll.current = true;
         setSelectedIndex(i);
-        setTimeout(() => {
+
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+        timeoutRef.current = setTimeout(() => {
             isProgrammaticScroll.current = false;
         }, 600);
     }
 
     function prevImage() {
-        const next = (selectedIndex - 1 + images.length) % images.length;
+        if (isProgrammaticScroll.current) return;
+        const next =
+            (selectedIndex - 1 + normalised.length) % normalised.length;
         scrollToIndex(next);
     }
 
     function nextImage() {
-        const next = (selectedIndex + 1) % images.length;
+        if (isProgrammaticScroll.current) return;
+        const next = (selectedIndex + 1) % normalised.length;
         scrollToIndex(next);
     }
 
     useEffect(() => {
         scrollContainerToIndex(selectedIndex);
     }, [selectedIndex]);
+
+    useEffect(() => {
+        return () => {
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        };
+    }, []);
 
     function handleMobileScroll(e) {
         if (isProgrammaticScroll.current) return;
@@ -56,20 +73,19 @@ export const OfferGalery = ({ images, title }) => {
 
     return (
         <div className="flex flex-col-reverse">
-            {/* Thumbnails (Desktop) */}
             <div className="mx-auto mt-5 hidden w-full max-w-2xl sm:block lg:max-w-none">
                 <div className="grid grid-cols-4 gap-4">
-                    {images.map((src, i) => (
+                    {normalised.map((img, i) => (
                         <button
-                            key={src}
+                            key={img.url ?? i}
                             type="button"
                             onClick={() => setSelectedIndex(i)}
                             className={`relative flex h-20 items-center justify-center rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-secondary-hover/70 focus:ring-offset-2`}
                         >
                             <span className="absolute inset-0 overflow-hidden rounded-md">
                                 <img
-                                    src={src}
-                                    alt=""
+                                    src={img.url}
+                                    alt={img.alt ?? ""}
                                     className="size-full object-cover"
                                 />
                             </span>
@@ -86,21 +102,18 @@ export const OfferGalery = ({ images, title }) => {
                 </div>
             </div>
 
-            {/* Main Image & Mobile Carousel */}
             <div className="w-full">
-                {/* Desktop View */}
                 <div className="bg-surface rounded-lg p-4 sm:p-6 hidden sm:block">
                     <img
-                        src={images[selectedIndex]}
-                        alt={title}
+                        src={normalised[selectedIndex]?.url}
+                        alt={normalised[selectedIndex]?.alt || title}
                         className="mx-auto w-full max-w-md aspect-square object-contain"
                     />
                 </div>
 
-                {/* Mobile Carousel View */}
                 <div className="mt-4 sm:hidden">
                     <div className="relative">
-                        {images.length > 1 && (
+                        {normalised.length > 1 && (
                             <>
                                 <button
                                     onClick={prevImage}
@@ -145,15 +158,15 @@ export const OfferGalery = ({ images, title }) => {
                             onScroll={handleMobileScroll}
                             className="flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 px-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                         >
-                            {images.map((src) => (
+                            {normalised.map((img, i) => (
                                 <div
-                                    key={src}
+                                    key={img.url ?? i}
                                     className="snap-center shrink-0 w-full"
                                 >
                                     <div className="bg-surface rounded-lg p-4">
                                         <img
-                                            src={src}
-                                            alt=""
+                                            src={img.url}
+                                            alt={img.alt ?? ""}
                                             className="mx-auto w-full max-w-sm aspect-square object-contain"
                                         />
                                     </div>
@@ -161,9 +174,8 @@ export const OfferGalery = ({ images, title }) => {
                             ))}
                         </div>
                     </div>
-                    {/* Dots */}
                     <div className="mt-3 flex justify-center gap-2">
-                        {images.map((_, i) => (
+                        {normalised.map((_, i) => (
                             <button
                                 key={i}
                                 onClick={() => scrollToIndex(i)}
@@ -175,4 +187,4 @@ export const OfferGalery = ({ images, title }) => {
             </div>
         </div>
     );
-};
+});

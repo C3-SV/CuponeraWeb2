@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { MOCK_PRODUCTS } from "../data/mockData";
 import { supabase } from "../lib/supabaseClient";
 import Swal from "sweetalert2";
 
@@ -12,7 +11,6 @@ const todayDateSupabaseFormat = () => {
     const dd = String(d.getDate()).padStart(2, "0");
     return `${yyyy}-${mm}-${dd}`;
 };
-
 
 const codePrefix3 = (name = "LCP") => {
     const letters = (name.toUpperCase().match(/[A-Z]/g) || []).join("");
@@ -39,15 +37,33 @@ const computeStatus = ({ validUntil, redeemedAt }) => {
     return "available";
 };
 
+const PRODUCT_IMAGES_BUCKET = "product-images";
+const CATEGORY_IMAGES_BUCKET = "categories-icons";
+const COMPANY_LOGOS_BUCKET = "companies-logos";
+
+const toStorageUrl = (url, bucket) => {
+    if (!url) return null;
+    if (/^https?:\/\//i.test(url)) return url;
+
+    const { data } = supabase.storage.from(bucket).getPublicUrl(url);
+    return data?.publicUrl ?? null;
+};
+
+
 export const useShopStore = create((set, get) => ({
     // Estado inicial
     products: [],
+    categories: [],
     cart: [],
     coupons: [],
     selectedCategory: null,
     productsLoading: false,
     productsError: null,
-    // Cargando informacion de la base de datos para ofertas
+    bestSellers: [],
+    endingSoonOffers: [],
+
+    // Cargando informacion de la base de datos 
+
     loadOffers: async () => {
         set({ productsLoading: true, productsError: null });
 
@@ -99,10 +115,8 @@ export const useShopStore = create((set, get) => ({
       )
     `)
             .is("deleted_at", null)
+            .eq("offer_status", "APPROVED")
             .order("created_at", { ascending: false });
-
-        //.order("image_sort_order", { foreignTable: "offer_carousel_images", ascending: true })
-        //.order("item_sort_order", { foreignTable: "offer_list_details", ascending: true });
 
         if (error) {
             console.error("loadOffers:", error);
@@ -120,16 +134,6 @@ export const useShopStore = create((set, get) => ({
 
             return;
         }
-
-        const PRODUCT_IMAGES_BUCKET = "product-images";
-
-        const toStorageUrl = (url, bucket) => {
-            if (!url) return null;
-            if (/^https?:\/\//i.test(url)) return url;
-
-            const { data } = supabase.storage.from(bucket).getPublicUrl(url);
-            return data?.publicUrl ?? null;
-        };
 
         // mapeo al componente 
         const mapped = (data ?? []).map((row) => {
@@ -164,14 +168,20 @@ export const useShopStore = create((set, get) => ({
 
             const details = [...rowDetails, ...(categoryData ? [{ categoryName: categoryData.name }] : [])];
 
-
             const businessName =
                 row.company?.deleted_at ? "—" : (row.company?.company_name ?? "—");
+
+            const companyPhoto = toStorageUrl(
+                row.company?.company_photo ?? null,
+                COMPANY_LOGOS_BUCKET
+            );
+
+            const categoryName = row.company?.category_id?.category_name ?? null;
+            const categoryId = row.company?.category_id?.category_id ?? null;
 
             const validUntil = row.coupon_usage_deadline ?? row.offer_end_date ?? null;
 
             return {
-                // campos compatibles con el componente 
                 id: row.offer_id,
                 name: row.offer_title,
                 description: row.offer_description,
@@ -189,7 +199,9 @@ export const useShopStore = create((set, get) => ({
 
                 companyId: row.company_id,
                 businessName,
-                companyPhoto: row.company?.company_photo ?? null,
+                companyPhoto,
+                categoryName,
+                categoryId,
 
                 images,
                 mainImage: mainImage,
@@ -198,6 +210,148 @@ export const useShopStore = create((set, get) => ({
         });
 
         set({ products: mapped, productsLoading: false });
+    },
+
+    loadCategories: async () => {
+        const { data, error } = await supabase
+            .from("categories")
+            .select(`category_id, category_name, category_img, category_img_hover, alt_text`)
+            .is("deleted_at", null)
+            .order("created_at", { ascending: false });
+
+        if (error) {
+            console.error("loadCategories:", error);
+            return [];
+        }
+
+        data.map((cat) => {
+            cat.category_img = toStorageUrl(cat.category_img, CATEGORY_IMAGES_BUCKET);
+            cat.category_img_hover = toStorageUrl(cat.category_img_hover, CATEGORY_IMAGES_BUCKET);
+        });
+
+        set({ categories: data ?? [] });
+    },
+
+    loadBestSellers: async () => {
+        set({ productsLoading: true, productsError: null });
+
+        const { data, error } = await supabase
+            .from("top_vendidos_mes")
+            .select(`
+                offer_id, offer_title, offer_description, offer_regular_price, offer_price,
+                offer_start_date, offer_end_date, coupon_usage_deadline, coupon_quantity_limit,
+                offer_status, company_id, deleted_at, total_vendido,
+                company:companies ( company_id, company_name, company_photo, deleted_at, category_id:categories ( category_id, category_name, category_img ) ),
+                offer_carousel_images ( offer_carousel_image_id, image_url, image_alt_text, image_sort_order, main_image, deleted_at ),
+                offer_list_details ( offer_list_detail_id, item_title, item_description, item_sort_order, deleted_at )
+            `)
+            .limit(12);
+
+        if (error) {
+            console.error("loadBestSellers:", error);
+            set({ productsLoading: false, productsError: error.message });
+            return;
+        }
+
+        const mapped = (data ?? []).map((row) => {
+            const images = (row.offer_carousel_images ?? []).map((img) => ({
+                id: img.offer_carousel_image_id,
+                url: toStorageUrl(img.image_url, PRODUCT_IMAGES_BUCKET),
+                alt: img.image_alt_text,
+                isMain: img.main_image,
+                sortOrder: img.image_sort_order,
+            }));
+            const mainImage = images.find((img) => img.isMain)?.url ?? images[0]?.url ?? null;
+
+            return {
+                id: row.offer_id,
+                name: row.offer_title,
+                description: row.offer_description,
+                price: Number(row.offer_price ?? 0),
+                regularPrice: Number(row.offer_regular_price ?? 0),
+                startDate: row.offer_start_date,
+                endDate: row.offer_end_date,
+                validUntil: row.coupon_usage_deadline ?? row.offer_end_date ?? null,
+                expiresAt: row.coupon_usage_deadline ?? row.offer_end_date ?? null,
+                stock: Number(row.coupon_quantity_limit ?? 0),
+                status: row.offer_status,
+                companyId: row.company_id,
+                businessName: row.company?.deleted_at ? "—" : (row.company?.company_name ?? "—"),
+                companyPhoto: row.company?.company_photo ?? null,
+                images,
+                mainImage,
+                salesCount: row.total_vendido
+            };
+        });
+
+        set({ bestSellers: mapped, productsLoading: false });
+    },
+
+    loadEndingSoon: async () => {
+        set({ productsLoading: true, productsError: null });
+
+        const today = new Date();
+        const nextWeek = new Date();
+        nextWeek.setDate(today.getDate() + 7);
+
+        const todayStr = today.toISOString().split("T")[0];
+        const nextWeekStr = nextWeek.toISOString().split("T")[0];
+
+        const { data, error } = await supabase
+            .from("offers")
+            .select(`
+                offer_id, offer_title, offer_description, offer_regular_price, offer_price,
+                offer_start_date, offer_end_date, coupon_usage_deadline, coupon_quantity_limit,
+                offer_status, company_id, deleted_at,
+                company:companies ( company_id, company_name, company_photo, deleted_at, category_id:categories ( category_id, category_name, category_img ) ),
+                offer_carousel_images ( offer_carousel_image_id, image_url, image_alt_text, image_sort_order, main_image, deleted_at ),
+                offer_list_details ( offer_list_detail_id, item_title, item_description, item_sort_order, deleted_at )
+            `)
+            .is("deleted_at", null)
+            .eq("offer_status", "APPROVED")
+            .gte("offer_end_date", todayStr)
+            .lte("offer_end_date", nextWeekStr)
+            .order("offer_end_date", { ascending: false });
+
+        if (error) {
+            console.error("loadEndingSoon:", error);
+            set({ productsLoading: false, productsError: error.message });
+            return;
+        }
+
+        const mapped = (data ?? []).map((row) => {
+            const images = (row.offer_carousel_images ?? []).map((img) => ({
+                id: img.offer_carousel_image_id,
+                url: toStorageUrl(img.image_url, PRODUCT_IMAGES_BUCKET),
+                alt: img.image_alt_text,
+                isMain: img.main_image,
+                sortOrder: img.image_sort_order,
+            }));
+            const mainImage = images.find((img) => img.isMain)?.url ?? images[0]?.url ?? null;
+            const validUntil = row.coupon_usage_deadline ?? row.offer_end_date ?? null;
+            const businessName = row.company?.deleted_at ? "—" : (row.company?.company_name ?? "—");
+
+            return {
+                id: row.offer_id,
+                name: row.offer_title,
+                description: row.offer_description,
+                price: Number(row.offer_price ?? 0),
+                regularPrice: Number(row.offer_regular_price ?? 0),
+                startDate: row.offer_start_date,
+                endDate: row.offer_end_date,
+                validUntil,
+                expiresAt: validUntil,
+                stock: Number(row.coupon_quantity_limit ?? 0),
+                status: row.offer_status,
+                companyId: row.company_id,
+                businessName,
+                companyPhoto: row.company?.company_photo ?? null,
+                images,
+                mainImage
+            };
+        });
+
+        set({ endingSoonOffers: mapped, productsLoading: false });
     },
 
     setCategory: (category) =>
@@ -210,6 +364,77 @@ export const useShopStore = create((set, get) => ({
         return products.filter(
             (product) => product.category === selectedCategory
         );
+    },
+
+    getOfferById: async (offerId) => {
+        const { data, error } = await supabase
+            .from("offers")
+            .select(`
+                offer_id, offer_title, offer_description, offer_regular_price, offer_price,
+                offer_start_date, offer_end_date, coupon_usage_deadline, coupon_quantity_limit,
+                offer_status, company_id, deleted_at,
+                company:companies (
+                    company_id, company_name, company_photo, deleted_at,
+                    category_id:categories ( category_id, category_name )
+                ),
+                offer_carousel_images ( offer_carousel_image_id, image_url, image_alt_text, image_sort_order, main_image, deleted_at ),
+                offer_list_details ( offer_list_detail_id, item_title, item_description, item_sort_order, deleted_at )
+            `)
+            .eq("offer_id", offerId)
+            .is("deleted_at", null)
+            .eq("offer_status", "APPROVED")
+            .maybeSingle();
+
+        if (error || !data) {
+            console.error("fetchOfferById:", error || "Oferta no encontrada o inactiva");
+            return null;
+        }
+
+        const images = (data.offer_carousel_images ?? []).map((img) => ({
+            id: img.offer_carousel_image_id,
+            url: toStorageUrl(img.image_url, PRODUCT_IMAGES_BUCKET),
+            alt: img.image_alt_text,
+            isMain: img.main_image,
+            sortOrder: img.image_sort_order,
+        }));
+
+        const mainImage = images.find((img) => img.isMain)?.url ?? images[0]?.url ?? null;
+
+        const details = (data.offer_list_details ?? [])
+            .filter((d) => !d.deleted_at)
+            .sort((a, b) => (a.item_sort_order ?? 1) - (b.item_sort_order ?? 1))
+            .map((d) => ({
+                id: d.offer_list_detail_id,
+                title: d.item_title,
+                description: d.item_description,
+                order: d.item_sort_order ?? 1,
+            }));
+
+        const businessName = data.company?.deleted_at ? "—" : (data.company?.company_name ?? "—");
+        const companyPhoto = toStorageUrl(data.company?.company_photo ?? null, COMPANY_LOGOS_BUCKET);
+        const categoryName = data.company?.category_id?.category_name ?? null;
+        const validUntil = data.coupon_usage_deadline ?? data.offer_end_date ?? null;
+
+        return {
+            id: data.offer_id,
+            name: data.offer_title,
+            description: data.offer_description,
+            price: Number(data.offer_price ?? 0),
+            regularPrice: Number(data.offer_regular_price ?? 0),
+            startDate: data.offer_start_date,
+            endDate: data.offer_end_date,
+            validUntil,
+            expiresAt: validUntil,
+            stock: Number(data.coupon_quantity_limit ?? 0),
+            status: data.offer_status,
+            companyId: data.company_id,
+            businessName,
+            companyPhoto,
+            categoryName,
+            images,
+            mainImage,
+            details,
+        };
     },
 
     // Acciones del carrito 
@@ -362,9 +587,48 @@ export const useShopStore = create((set, get) => ({
             };
         }),
 
-    // guardar compra en la base de datos 
+    // validar compra en base de datos 
+    validateCartAgainstDb: async () => {
+        const cart = get().cart;
+        if (!cart?.length) return { ok: false, issues: ["Carrito vacío"] };
 
-    savePurchaseToSupabase: async ({ paymentRef }) => {
+        const today = todayDateSupabaseFormat();
+        const ids = [...new Set(cart.map(i => i.id))];
+
+        const { data: rows, error } = await supabase
+            .from("offers")
+            .select("offer_id, offer_status, deleted_at, coupon_quantity_limit, coupon_usage_deadline, offer_end_date")
+            .in("offer_id", ids);
+
+        if (error) throw error;
+
+        const byId = new Map((rows ?? []).map(r => [r.offer_id, r]));
+        const issues = [];
+
+        for (const item of cart) {
+            const r = byId.get(item.id);
+            if (!r) {
+                issues.push(`Oferta no encontrada: ${item.name}`);
+                continue;
+            }
+
+            if (r.deleted_at) issues.push(`Oferta eliminada: ${item.name}`);
+            if (r.offer_status !== "APPROVED") issues.push(`Oferta no aprobada: ${item.name}`);
+
+            const stockDb = Number(r.coupon_quantity_limit ?? 0);
+            const qty = Math.max(1, Number(item.quantity) || 1);
+            if (stockDb < qty) issues.push(`Sin stock suficiente: ${item.name} (disp: ${stockDb}, pedís: ${qty})`);
+
+            const validUntil = (r.coupon_usage_deadline ?? r.offer_end_date);
+            const validUntilDate = validUntil ? String(validUntil).slice(0, 10) : null;
+            if (validUntilDate && validUntilDate < today) issues.push(`Oferta vencida: ${item.name} (venció: ${validUntilDate})`);
+        }
+
+        return { ok: issues.length === 0, issues, offersDb: rows ?? [] };
+    },
+
+    // guardar compra en la base de datos 
+    savePurchaseToSupabase: async ({ paymentRef, offersDb }) => {
         const cart = get().cart;
 
         if (!cart || cart.length === 0) throw new Error("Carrito vacío");
@@ -408,7 +672,7 @@ export const useShopStore = create((set, get) => ({
 
             if (itemsErr) throw itemsErr;
 
-            // 3) Insert coupons (1 fila por unidad)
+            // Insert coupons (1 fila por unidad)
             const couponsPayload = [];
             for (const row of itemRows) {
                 const original = cart.find((x) => x.id === row.offer_id);
@@ -440,7 +704,32 @@ export const useShopStore = create((set, get) => ({
             const { error: couponsErr } = await supabase.from("coupons").insert(couponsPayload);
             if (couponsErr) throw couponsErr;
 
-            // 4) limpiar carrito local
+            // cambiar y ajustar stock de ofertas 
+            const byId = new Map((offersDb ?? []).map(r => [r.offer_id, r]));
+
+            for (const item of cart) {
+                const r = byId.get(item.id);
+                if (!r) continue;
+
+                const oldStock = Number(r.coupon_quantity_limit ?? 0);
+                const qty = Math.max(1, Number(item.quantity) || 1);
+                const newStock = oldStock - qty;
+
+                // solo actualiza si el stock no cambió
+                const { data: updated, error: updErr } = await supabase
+                    .from("offers")
+                    .update({ coupon_quantity_limit: newStock })
+                    .eq("offer_id", item.id)
+                    .eq("coupon_quantity_limit", oldStock)
+                    .select("offer_id");
+
+                if (updErr) throw updErr;
+                if (!updated || updated.length === 0) {
+                    throw new Error(`Stock cambió mientras comprabas: ${item.name}. Reintentá.`);
+                }
+            }
+
+            // limpiar carrito local
             set({ cart: [] });
 
             return orderId;
@@ -552,7 +841,7 @@ export const useShopStore = create((set, get) => ({
         // con login 
         const { data: authData, error: authErr } = await supabase.auth.getUser();
         const user = authData?.user;
-        if (authErr || !user) throw new Error("Debés iniciar sesión para canjear."); 
+        if (authErr || !user) throw new Error("Debés iniciar sesión para canjear.");
 
         // Traer info del cupón + oferta/negocio + order customer (para validar)
         const { data, error } = await supabase
@@ -570,7 +859,7 @@ export const useShopStore = create((set, get) => ({
 
         if (error) throw error;
 
-        const expires = data.coupon_expires_at; 
+        const expires = data.coupon_expires_at;
         const today = todayDateSupabaseFormat();
 
         const isExpired = expires && expires < today;

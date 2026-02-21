@@ -4,9 +4,6 @@ import { useShopStore } from "../../store/useShop";
 
 export const OrderSummary = () => {
   const cart = useShopStore((state) => state.cart);
-  // para terminar compra
-  const finalizePurchase = useShopStore((s) => s.finalizePurchase);
-
   // Cálculos dinámicos
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const serviceFee = 8.32; // se puede hacer mas dinámico (ej: subtotal * 0.05)
@@ -21,6 +18,16 @@ export const OrderSummary = () => {
         title: "Carrito vacío",
         text: "Agregá al menos un producto para continuar.",
         icon: "info",
+      });
+      return;
+    }
+
+    const check = await useShopStore.getState().validateCartAgainstDb();
+    if (!check.ok) {
+      await Swal.fire({
+        title: "No se puede comprar",
+        html: `<ul style="text-align:left">${check.issues.map(i => `<li>${i}</li>`).join("")}</ul>`,
+        icon: "warning",
       });
       return;
     }
@@ -41,7 +48,6 @@ export const OrderSummary = () => {
     });
 
     if (!confirm.isConfirmed) return;
-
     try {
       setLoading(true);
 
@@ -69,7 +75,11 @@ export const OrderSummary = () => {
       if (r.ok && data?.ok && data?.status === "succeeded") {
         const paymentRef = data.paymentIntentId ?? null;
 
-        await useShopStore.getState().savePurchaseToSupabase({ paymentRef });
+        await useShopStore.getState().savePurchaseToSupabase({
+          paymentRef,
+          offersDb: check.offersDb, 
+        });
+        
         await useShopStore.getState().loadMyCouponsFromSupabase();
 
         Swal.close();
