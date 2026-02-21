@@ -20,7 +20,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
 
   const nameRegex = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/;
-  const duiRegex = /^\d{8}-\d{1}$/;
+  const duiRegex = /^\d{9}$/;
   const phoneRegex = /^\d{8}$/;
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -49,7 +49,7 @@ export default function Register() {
   }
 
   if (!duiRegex.test(dui)) {
-    return showError("Error", "El DUI debe tener formato 00000000-0");
+    return showError("Error", "El DUI debe tener 9 números");
   }
 
   if (!phone.trim()) {

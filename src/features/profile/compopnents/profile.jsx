@@ -1,6 +1,7 @@
 import { useAuthStore } from "../../../store/authStore";
 import { useNavigate, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { showError, showSuccess } from "../../../utils/errorHandler";
 import { supabase } from "../../../lib/supabaseClient";
 
 export default function Profile() {
@@ -31,8 +32,43 @@ export default function Profile() {
     navigate("/");
   };
 
+  const nameRegex = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/;
+  const duiRegex = /^\d{9}$/;
+  const phoneRegex = /^\d{8}$/;
   const handleUpdate = async (e) => {
     e.preventDefault();
+    if (!name.trim()) {
+        return showError("Error", "El nombre es requerido");
+      }
+    
+      if (!nameRegex.test(name)) {
+        return showError("Error", "El nombre solo puede contener letras y espacios");
+      }
+    
+      if (!lastname.trim()) {
+        return showError("Error", "El apellido es requerido");
+      }
+    
+      if (!nameRegex.test(lastname)) {
+        return showError("Error", "El apellido solo puede contener letras y espacios");
+      }
+    
+      if (!dui.trim()) {
+        return showError("Error", "El DUI es requerido");
+      }
+    
+      if (!duiRegex.test(dui)) {
+        return showError("Error", "El DUI debe tener 9 números");
+      }
+    
+      if (!phone.trim()) {
+        return showError("Error", "El teléfono es requerido");
+      }
+    
+      if (!phoneRegex.test(phone)) {
+        return showError("Error", "El teléfono debe tener 8 números");
+      }
+    
     setLoading(true);
     setMsg("");
 
@@ -48,10 +84,10 @@ export default function Profile() {
       });
 
       if (error) throw error;
-      setMsg("Perfil actualizado correctamente");
+      showSuccess("Perfil actualizado correctamente");
     } catch (err) {
       console.error(err);
-      setMsg(err.message || "Error al actualizar");
+      showError("Error al actualizar", err.message);
     } finally {
       setLoading(false);
     }
