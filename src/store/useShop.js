@@ -4,10 +4,23 @@ import { supabase } from "../lib/supabaseClient";
 
 const toISO = (d) => new Date(d).toISOString();
 
+const codePrefix3 = (name = "LCP") => {
+    const letters = (name.toUpperCase().match(/[A-Z]/g) || []).join("");
+    return (letters + "XXX").slice(0, 3);
+};
+
+const toDateYYYYMMDD = (d) => {
+    const dt = new Date(d);
+    const yyyy = dt.getFullYear();
+    const mm = String(dt.getMonth() + 1).padStart(2, "0");
+    const dd = String(dt.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+};
+
 const generateCode = (businessName) => {
-    const prefix = (businessName[0] || "X").toUpperCase() + (businessName[1] || "X").toUpperCase();
-    const random7Digits = () => String(Math.floor(Math.random() * 10_000_000)).padStart(7, "0");
-    return `${prefix}-${random7Digits()}`;
+    const prefix = codePrefix3(businessName);
+    const random7Digits = () => String(Math.floor(Math.random() * 1e10)).padStart(10, "0");
+    return `${prefix}${random7Digits()}`;
 }
 
 const computeStatus = ({ validUntil, redeemedAt }) => {
@@ -37,8 +50,7 @@ export const useShopStore = create((set, get) => ({
     selectedCategory: null,
     productsLoading: false,
     productsError: null,
-    // Cargando informacion de la base de datos 
-
+    // Cargando informacion de la base de datos para ofertas
     loadOffers: async () => {
         set({ productsLoading: true, productsError: null });
 
@@ -205,17 +217,20 @@ export const useShopStore = create((set, get) => ({
     // Acciones del carrito 
     addToCart: (product, quantity = 1) =>
         set((state) => {
+            const qty = Math.max(1, Number(quantity) || 1);
             const existingItem = state.cart.find((item) => item.id === product.id);
+
             if (existingItem) {
+                const current = Number(existingItem.quantity || 0);
                 return {
                     cart: state.cart.map((item) =>
                         item.id === product.id
-                            ? { ...item, quantity: item.quantity + quantity }
+                            ? { ...item, quantity: current + qty }
                             : item
                     ),
                 };
             }
-            return { cart: [...state.cart, { ...product, quantity }] };
+            return { cart: [...state.cart, { ...product, quantity: qty }] };
         }),
 
     removeFromCart: (productId) =>
@@ -224,16 +239,18 @@ export const useShopStore = create((set, get) => ({
         })),
 
     updateQuantity: (productId, quantity) =>
-        set((state) => ({
-            cart: state.cart.map((item) =>
-                item.id === productId ? { ...item, quantity: Number(quantity) } : item
-            ),
-        })),
+        set((state) => {
+            const qty = Math.max(1, Number(quantity) || 1);
+            return {
+                cart: state.cart.map((item) =>
+                    item.id === productId ? { ...item, quantity: qty } : item
+                ),
+            };
+        }),
 
     clearCart: () => set({ cart: [] }),
 
     // Acciones de cupones
-
     finalizePurchase: (meta = {}) =>
         set((state) => {
             const purchaseDate = meta.purchaseDate ?? toISO(new Date());
@@ -287,6 +304,164 @@ export const useShopStore = create((set, get) => ({
                 cart: [], // limpiar el carrito
             };
         }),
+
+    // guardar compra en la base de datos 
+
+    savePurchaseToSupabase: async ({ paymentRef }) => {
+        const cart = get().cart;
+
+        if (!cart || cart.length === 0) throw new Error("Carrito vacío");
+
+        const { data: authData, error: authErr } = await supabase.auth.getUser();
+        const user = authData?.user;
+        if (authErr || !user) throw new Error("No autenticado");
+
+        // 1) Insert order
+        const now = new Date();
+        const { data: orderRows, error: orderErr } = await supabase
+            .from("orders")
+            .insert([
+                {
+                    customer_id: user.id,
+                    order_payment_ref: paymentRef ?? null,
+                    order_paid_at: now.toISOString(),
+                    order_status: "COMPLETED",
+                },
+            ])
+            .select("order_id")
+            .single();
+
+        if (orderErr) throw orderErr;
+
+        const orderId = orderRows.order_id;
+
+        try {
+            // 2) Insert order_items (return ids)
+            const itemsPayload = cart.map((it) => ({
+                order_id: orderId,
+                offer_id: it.id,
+                quantity: Math.max(1, Number(it.quantity) || 1),
+                unit_price: Number(it.price ?? 0),
+            }));
+
+            const { data: itemRows, error: itemsErr } = await supabase
+                .from("order_items")
+                .insert(itemsPayload)
+                .select("order_item_id, offer_id, quantity");
+
+            if (itemsErr) throw itemsErr;
+
+            // 3) Insert coupons (1 fila por unidad)
+            const couponsPayload = [];
+            for (const row of itemRows) {
+                const original = cart.find((x) => x.id === row.offer_id);
+                const businessName = original?.businessName ?? "LCP";
+
+                // expiración: si el offer trae validUntil/expiresAt, úsalo, si no +30 días
+                const expires =
+                    original?.validUntil || original?.expiresAt
+                        ? toDateYYYYMMDD(original.validUntil || original.expiresAt)
+                        : (() => {
+                            const d = new Date(now);
+                            d.setDate(d.getDate() + 30);
+                            return toDateYYYYMMDD(d);
+                        })();
+
+                const qty = Math.max(1, Number(row.quantity) || 1);
+
+                for (let i = 0; i < qty; i++) {
+                    couponsPayload.push({
+                        order_item_id: row.order_item_id,
+                        coupon_code: generateCode(businessName),
+                        coupon_expires_at: expires, // date YYYY-MM-DD
+                        coupon_status: "AVAILABLE",
+                    });
+                }
+            }
+
+            // Inserción en lote (si choca UNIQUE por casualidad, lo verás en el error)
+            const { error: couponsErr } = await supabase.from("coupons").insert(couponsPayload);
+            if (couponsErr) throw couponsErr;
+
+            // 4) limpiar carrito local
+            set({ cart: [] });
+
+            return orderId;
+        } catch (e) {
+            // Rollback: si falla items o coupons, borramos la orden (FK cascade limpia todo)
+            await supabase.from("orders").delete().eq("order_id", orderId);
+            throw e;
+        }
+    },
+
+    // cargar cupones desde la base 
+
+    loadMyCouponsFromSupabase: async () => {
+        const { data: authData } = await supabase.auth.getUser();
+        const user = authData?.user;
+        if (!user) {
+            set({ coupons: [] });
+            return;
+        }
+
+        const { data, error } = await supabase
+            .from("orders")
+            .select(`
+      order_id, order_paid_at, order_status,
+      order_items (
+        order_item_id, offer_id, quantity, unit_price,
+        offers (
+          offer_title,
+          companies ( company_name )
+        ),
+        coupons (
+          coupon_id, coupon_code, coupon_expires_at, coupon_redeemed_at, coupon_status
+        )
+      )
+    `)
+            .eq("customer_id", user.id)
+            .eq("order_status", "COMPLETED")
+            .is("deleted_at", null)
+            .order("order_paid_at", { ascending: false });
+
+        if (error) {
+            console.error("loadMyCouponsFromSupabase:", error);
+            return;
+        }
+
+        // Flatten a tu UI
+        const out = [];
+        for (const o of data ?? []) {
+            for (const oi of o.order_items ?? []) {
+                const offerName = oi.offers?.offer_title ?? "Cupón";
+                const businessName = oi.offers?.companies?.company_name ?? "—";
+
+                for (const c of oi.coupons ?? []) {
+                    const status =
+                        c.coupon_status === "REDEEMED"
+                            ? "redeemed"
+                            : new Date(c.coupon_expires_at) < new Date()
+                                ? "expired"
+                                : "available";
+
+                    out.push({
+                        id: c.coupon_id,
+                        code: c.coupon_code,
+                        offerId: oi.offer_id,
+                        offerName,
+                        businessName,
+                        purchaseDate: o.order_paid_at ? o.order_paid_at.slice(0, 10) : null,
+                        validFrom: o.order_paid_at ? o.order_paid_at.slice(0, 10) : null,
+                        validUntil: c.coupon_expires_at,
+                        redeemedAt: c.coupon_redeemed_at,
+                        status,
+                    });
+                }
+            }
+        }
+
+        set({ coupons: out });
+    },
 
     // marcar cupon como canjeado 
     redeemCoupon: (couponId) =>
