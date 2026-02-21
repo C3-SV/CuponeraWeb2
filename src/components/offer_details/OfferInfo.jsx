@@ -19,7 +19,7 @@ export const OfferInfo = ({
                         <img
                             src={companyPhoto}
                             alt={businessName ?? ""}
-                            className="h-10 w-10 rounded-full object-cover border border-gray-200"
+                            className="h-14 w-24 p-2 rounded object-contain border border-gray-200"
                         />
                     )}
                     <div>
