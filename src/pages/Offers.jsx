@@ -16,6 +16,8 @@ export const Offers = ({ title }) => {
     const loadCategories = useShopStore((s) => s.loadCategories);
     const products = useShopStore((state) => state.products);
     const categories = useShopStore((state) => state.categories);
+    const selectedCategory = useShopStore((s) => s.selectedCategory);
+    const setCategory = useShopStore((s) => s.setCategory);
 
     const rubrosOptions = categories.map((cat) => ({
         label: cat.category_name,
@@ -27,10 +29,20 @@ export const Offers = ({ title }) => {
         loadCategories();
     }, [loadOffers, loadCategories]);
 
-    // Reset filtered products when base products change
+    // When coming from the home page with a selected category, pre-select it
     useEffect(() => {
-        setFilteredProducts(null);
-    }, [products]);
+        if (selectedCategory) {
+            setSelectedRubros([selectedCategory]);
+            setCategory(null);
+        }
+    }, [selectedCategory, setCategory]);
+
+    // Auto-apply filter once products are loaded and a rubro is pre-selected
+    useEffect(() => {
+        if (products.length > 0 && selectedRubros.length > 0 && filteredProducts === null) {
+            setFilteredProducts(products.filter((p) => selectedRubros.includes(p.categoryId)));
+        }
+    }, [products, selectedRubros, filteredProducts]);
 
     const handleRubroChange = (value) => {
         setSelectedRubros((prev) =>
