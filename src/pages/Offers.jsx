@@ -46,7 +46,21 @@ export const Offers = ({ title }) => {
         );
     };
 
-    const handleApply = () => {
+    // Auto-apply filters whenever any filter state or products change
+    useEffect(() => {
+        if (products.length === 0) return;
+
+        const hasActiveFilters =
+            selectedRubros.length > 0 ||
+            priceRange.min !== 0 ||
+            priceRange.max !== 5000 ||
+            endDate;
+
+        if (!hasActiveFilters) {
+            setFilteredProducts(null);
+            return;
+        }
+
         let result = [...products];
 
         if (selectedRubros.length > 0) {
@@ -68,7 +82,7 @@ export const Offers = ({ title }) => {
         }
 
         setFilteredProducts(result);
-    };
+    }, [selectedRubros, priceRange, endDate, products]);
 
     const handleClear = () => {
         setPriceRange({ min: 0, max: 5000 });
@@ -85,7 +99,6 @@ export const Offers = ({ title }) => {
         rubrosOptions,
         selectedRubros,
         onRubroChange: handleRubroChange,
-        onApply: handleApply,
         onClear: handleClear,
     };
 
