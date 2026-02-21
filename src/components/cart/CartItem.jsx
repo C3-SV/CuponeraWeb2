@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
+import Swal from "sweetalert2";
 import { useShopStore } from "../../store/useShop";
 
 export const CartItem = ({ item }) => {
@@ -7,13 +8,15 @@ export const CartItem = ({ item }) => {
     const removeFromCart = useShopStore((state) => state.removeFromCart);
     const updateQuantity = useShopStore((state) => state.updateQuantity);
 
-    // para mostrar el limite 
+    // para mostrar el limite
     const max = useMemo(() => {
         const s = Number(item.stock);
         return Number.isFinite(s) && s > 0 ? s : 999;
     }, [item.stock]);
+
     const [qty, setQty] = useState(String(item.quantity ?? 1));
-    // Sincroniza si el store cambia quantity 
+
+    // Sincroniza si el store cambia quantity
     useEffect(() => {
         setQty(String(item.quantity ?? 1));
     }, [item.quantity]);
@@ -26,6 +29,27 @@ export const CartItem = ({ item }) => {
 
     const decQty = () => commitQty((Number(qty) || 1) - 1);
     const incQty = () => commitQty((Number(qty) || 1) + 1);
+
+    const confirmRemove = async () => {
+        const r = await Swal.fire({
+            title: "¿Eliminar del carrito?",
+            text: item.name || "Este producto",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Sí, eliminar",
+            cancelButtonText: "Cancelar",
+        });
+
+        if (r.isConfirmed) {
+            removeFromCart(item.id);
+            Swal.fire({
+                title: "Eliminado",
+                icon: "success",
+                timer: 900,
+                showConfirmButton: false,
+            });
+        }
+    };
 
     return (
         <li className="flex py-6 sm:py-10">
@@ -77,18 +101,13 @@ export const CartItem = ({ item }) => {
                                 <input
                                     value={qty}
                                     onChange={(e) => {
-                                        const val = e.target.value.replace(
-                                            /[^\d]/g,
-                                            "",
-                                        );
-                                        setQty(
-                                            val === ""
-                                                ? ""
-                                                : Math.max(
-                                                    1,
-                                                    Math.min(stock, Number(val)),
-                                                ),
-                                        );
+                                        const val = e.target.value.replace(/[^\d]/g, "");
+                                        if (val === "") {
+                                            setQty("");
+                                            return;
+                                        }
+                                        const next = Math.max(1, Math.min(max, Number(val)));
+                                        setQty(String(next));
                                     }}
                                     onBlur={() => {
                                         commitQty(qty);
@@ -105,10 +124,11 @@ export const CartItem = ({ item }) => {
                                 </button>
                             </div>
                         </div>
+
                         <div className="absolute top-0 right-0">
                             <button
                                 type="button"
-                                onClick={() => removeFromCart(item.id)}
+                                onClick={confirmRemove}
                                 className="-m-2 inline-flex p-2 text-gray-400 hover:text-red-500 transition-colors"
                             >
                                 <span className="sr-only">Eliminar</span>
