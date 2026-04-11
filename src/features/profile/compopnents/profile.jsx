@@ -2,11 +2,13 @@ import { useAuthStore } from "../../../store/authStore";
 import { useNavigate, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { showError, showSuccess } from "../../../utils/errorHandler";
-import { supabase } from "../../../lib/supabaseClient";
+import { updateCurrentSessionProfile } from "../../auth/sessionService";
 
 export default function Profile() {
   const session = useAuthStore((state) => state.session);
+  const profile = useAuthStore((state) => state.profile);
   const logout = useAuthStore((state) => state.logout);
+  const refreshProfile = useAuthStore((state) => state.refreshProfile);
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
@@ -19,13 +21,13 @@ export default function Profile() {
 
   useEffect(() => {
     if (!session) return;
-    const md = session.user?.user_metadata || {};
-    setName(md.name || "");
-    setLastname(md.lastname || "");
-    setPhone(md.phone || "");
-    setDui(md.dui || "");
-    setAddress(md.address || "");
-  }, [session]);
+
+    setName(profile?.first_names || session.user?.user_metadata?.first_names || session.user?.user_metadata?.name || "");
+    setLastname(profile?.last_names || session.user?.user_metadata?.last_names || session.user?.user_metadata?.lastname || "");
+    setPhone(profile?.phone || session.user?.user_metadata?.phone || "");
+    setDui(profile?.dui || session.user?.user_metadata?.dui || "");
+    setAddress(profile?.address || session.user?.user_metadata?.address || "");
+  }, [session, profile]);
 
   const handleLogout = async () => {
     await logout();
@@ -73,18 +75,15 @@ export default function Profile() {
     setMsg("");
 
     try {
-      const { data, error } = await supabase.auth.updateUser({
-        data: {
-          name: name,
-          lastname: lastname,
-          phone: phone,
-          dui: dui,
-          address: address,
-        },
+      await updateCurrentSessionProfile(session.access_token, {
+        first_names: name,
+        last_names: lastname,
+        phone,
+        dui,
+        address,
       });
-
-      if (error) throw error;
-      showSuccess("Perfil actualizado correctamente");
+      await refreshProfile();
+      showSuccess("Éxito", "Perfil actualizado correctamente");
     } catch (err) {
       console.error(err);
       showError("Error al actualizar", err.message);
@@ -104,7 +103,7 @@ export default function Profile() {
       <form onSubmit={handleUpdate} className="space-y-4">
         <div>
           <label className="block text-sm text-gray-700">Email</label>
-          <p className="text-sm text-gray-800">{session?.user?.email}</p>
+          <p className="text-sm text-gray-800">{profile?.email || session?.user?.email}</p>
         </div>
 
         <div>

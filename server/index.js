@@ -1,55 +1,35 @@
 import express from "express";
 import cors from "cors";
-import "dotenv/config";
-import Stripe from "stripe";
+import "./src/config/load-env.js";
+import { env } from "./src/config/env.js";
+import { errorHandler, asyncHandler, notFoundHandler } from "./src/lib/http.js";
+import { authRouter } from "./src/modules/auth/auth.routes.js";
+import { adminRouter } from "./src/modules/admin/admin.routes.js";
+import { createPaymentIntent } from "./src/modules/pay/pay.handlers.js";
 
 const app = express();
-app.use(cors({ origin: process.env.CLIENT_ORIGIN }));
+
+app.use(
+  cors({
+    origin: env.CLIENT_ORIGIN || true,
+    credentials: true,
+  }),
+);
 app.use(express.json());
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+app.get("/", (_req, res) => res.send("OK"));
+app.get("/health", (_req, res) => res.json({ ok: true }));
+app.get("/api/health", (_req, res) => res.json({ ok: true }));
 
-app.get("/", (req, res) => res.send("OK"));
-app.get("/health", (req, res) => res.json({ ok: true }));
+app.post("/pay", asyncHandler(createPaymentIntent));
+app.post("/api/pay", asyncHandler(createPaymentIntent));
 
-app.post("/pay", async (req, res) => {
-  try {
-    const { amountCents, cart } = req.body;
+app.use("/api/auth", authRouter);
+app.use("/api/admin", adminRouter);
 
-    if (!Number.isInteger(amountCents) || amountCents <= 0) {
-      return res.status(400).json({ ok: false, status: "invalid_amount" });
-    }
+app.use(notFoundHandler);
+app.use(errorHandler);
 
-    const pi = await stripe.paymentIntents.create({
-      amount: amountCents,
-      currency: "usd",
-      automatic_payment_methods: { enabled: true, allow_redirects: "never" },
-      payment_method: "pm_card_visa",
-      confirm: true,
-      description: "MVP académico - pago simulado",
-      metadata: {
-        cartItems: Array.isArray(cart) ? String(cart.length) : "0",
-      },
-    });
-
-    // Frontend necesita:
-    return res.json({ 
-      ok: true, 
-      status: pi.status,
-      paymentIntentId: pi.id,
-      amount: pi.amount,
-      currency: pi.currency
-    });
-  } catch (err) {
-
-    return res.status(500).json({
-      ok: false,
-      status: "error",
-      error: err?.message ?? "Stripe error",
-    });
-  }
-});
-
-app.listen(process.env.PORT || 4242, () => {
-  console.log(`Backend running on http://localhost:${process.env.PORT || 4242}`);
+app.listen(env.PORT, () => {
+  console.log(`Backend running on http://localhost:${env.PORT}`);
 });

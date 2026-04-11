@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:server": "npm --prefix server run dev",
     "build": "vite build",
+    "test": "node --test server/tests/admin.test.js",
     "lint": "eslint .",
     "preview": "vite preview"
   },

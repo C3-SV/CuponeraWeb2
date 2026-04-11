@@ -1,21 +1,19 @@
 import { useState } from "react";
 import Swal from "sweetalert2";
 import { useShopStore } from "../../store/useShop";
+import { apiRequest } from "../../lib/apiClient";
 
 export const OrderSummary = () => {
     const cart = useShopStore((state) => state.cart);
-    // Cálculos dinámicos
     const total = cart.reduce(
         (acc, item) => acc + item.price * item.quantity,
         0,
     );
 
     const [loading, setLoading] = useState(false);
-    const FUNCTIONS_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
     const handlePay = async () => {
         if (cart.length === 0) {
-            // Sweet Alert: Carrito Vacío
             await Swal.fire({
                 title: "Carrito vacío",
                 text: "Agregá al menos un producto para continuar.",
@@ -26,7 +24,6 @@ export const OrderSummary = () => {
 
         const check = await useShopStore.getState().validateCartAgainstDb();
         if (!check.ok) {
-            // Sweet Alert: No se puede comprar
             await Swal.fire({
                 title: "No se puede comprar",
                 html: `<ul style="text-align:left">${check.issues.map((i) => `<li>${i}</li>`).join("")}</ul>`,
@@ -35,7 +32,6 @@ export const OrderSummary = () => {
             return;
         }
 
-        // Sweet Alert: Confirmar pago
         const confirm = await Swal.fire({
             title: "Confirmar pago",
             html: `
@@ -50,10 +46,10 @@ export const OrderSummary = () => {
         });
 
         if (!confirm.isConfirmed) return;
+
         try {
             setLoading(true);
 
-            // Sweet Alert: Procesando pago
             Swal.fire({
                 title: "Procesando pago...",
                 allowOutsideClick: false,
@@ -61,21 +57,12 @@ export const OrderSummary = () => {
             });
 
             const amountCents = Math.round(total * 100);
-
-            const r = await fetch(`${FUNCTIONS_BASE}/.netlify/functions/pay`, {
+            const data = await apiRequest("/pay", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ amountCents, cart }),
+                body: { amountCents, cart },
             });
 
-            let data = null;
-            try {
-                data = await r.json();
-            } catch {
-                // ignore parse
-            }
-
-            if (r.ok && data?.ok && data?.status === "succeeded") {
+            if (data?.status === "succeeded") {
                 const paymentRef = data.paymentIntentId ?? null;
 
                 await useShopStore.getState().savePurchaseToSupabase({
@@ -85,7 +72,6 @@ export const OrderSummary = () => {
 
                 await useShopStore.getState().loadMyCouponsFromSupabase();
 
-                // Sweet Alert: Pago exitoso
                 Swal.close();
                 await Swal.fire({
                     title: "¡Pago exitoso!",
@@ -93,24 +79,21 @@ export const OrderSummary = () => {
                     icon: "success",
                 });
 
-                // si compra exitosa, limpiar carrito
                 useShopStore.persist.clearStorage();
                 return;
             }
 
-            // Sweet Alert: Pago no completado
             Swal.close();
             await Swal.fire({
                 title: "Pago no completado",
                 text: data?.error || "Intenta de nuevo.",
                 icon: "error",
             });
-        } catch (e) {
-            // Sweet Alert: Error en el pago
+        } catch (error) {
             Swal.close();
             await Swal.fire({
                 title: "Error técnico",
-                text: e?.message || "No se pudo procesar el pago.",
+                text: error?.message || "No se pudo procesar el pago.",
                 icon: "error",
             });
         } finally {
@@ -138,18 +121,18 @@ export const OrderSummary = () => {
                             key={item.id}
                             className="flex items-start justify-between gap-4"
                         >
-                            <dt className="text-sm text-gray-600 flex-1">
+                            <dt className="flex-1 text-sm text-gray-600">
                                 <span className="line-clamp-2">
                                     {item.name}
                                 </span>
                                 {item.quantity > 1 && (
-                                    <span className="text-xs text-gray-400 block mt-0.5">
+                                    <span className="mt-0.5 block text-xs text-gray-400">
                                         {item.quantity} x $
                                         {item.price.toFixed(2)}
                                     </span>
                                 )}
                             </dt>
-                            <dd className="text-sm font-medium text-gray-900 shrink-0">
+                            <dd className="shrink-0 text-sm font-medium text-gray-900">
                                 ${(item.price * item.quantity).toFixed(2)}
                             </dd>
                         </div>
@@ -171,7 +154,7 @@ export const OrderSummary = () => {
                     type="button"
                     onClick={handlePay}
                     disabled={loading || cart.length === 0}
-                    className="w-full rounded-md border border-transparent bg-primary px-4 py-3 text-base font-medium text-white shadow-xs hover:bg-primary-hover focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-hidden transition disabled:opacity-60"
+                    className="w-full rounded-md border border-transparent bg-primary px-4 py-3 text-base font-medium text-white shadow-xs transition hover:bg-primary-hover focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-hidden disabled:opacity-60"
                 >
                     {loading ? "Procesando..." : "Proceder al pago"}
                 </button>

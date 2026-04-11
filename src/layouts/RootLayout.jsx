@@ -20,7 +20,9 @@ const linkMobile = ({ isActive }) =>
 export default function RootLayout() {
     const [mobileOpen, setMobileOpen] = useState(false);
     const session = useAuthStore((s) => s.session);
+    const profile = useAuthStore((s) => s.profile);
     const [showScrollTop, setShowScrollTop] = useState(false); // Estado para el botón
+    const isAdminGeneral = profile?.role === "admin.general";
 
     // Cerrar con ESC
     useEffect(() => {
@@ -89,6 +91,11 @@ export default function RootLayout() {
                         <NavLink to="/coupons" className={linkDesktop}>
                             Mis cupones
                         </NavLink>
+                        {isAdminGeneral ? (
+                            <NavLink to="/admin" className={linkDesktop}>
+                                Administración
+                            </NavLink>
+                        ) : null}
                     </div>
 
                     <div className="flex items-center gap-4">
@@ -210,6 +217,15 @@ export default function RootLayout() {
                                     >
                                         Mi carrito
                                     </NavLink>
+                                    {isAdminGeneral ? (
+                                        <NavLink
+                                            to="/admin"
+                                            className={linkMobile}
+                                            onClick={() => setMobileOpen(false)}
+                                        >
+                                            Administración
+                                        </NavLink>
+                                    ) : null}
 
                                     {session ? (
                                         <NavLink

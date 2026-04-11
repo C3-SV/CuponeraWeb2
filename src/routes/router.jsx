@@ -10,6 +10,7 @@ import { authRoutes } from "../features/auth/routes/auth_routes";
 import { profileRoutes } from "../features/profile/routes/profile_routes.jsx";
 import { cartRoutes } from "../features/cart/routes/cart_routes";
 import { couponsRoutes } from "../features/coupons/routes/coupons_routes.jsx";
+import { adminRoutes } from "../features/admin/routes/admin_routes.jsx";
 
 const appRoutes = [
   ...offerRoutes,
@@ -17,6 +18,7 @@ const appRoutes = [
   ...profileRoutes,
   ...cartRoutes,
   ...couponsRoutes,
+  ...adminRoutes,
 ];
 
 export const router = createBrowserRouter([

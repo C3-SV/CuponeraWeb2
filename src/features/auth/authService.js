@@ -8,10 +8,14 @@ export const registerUser = async (email, password, name, lastname, phone, dui, 
     options: {
       data: {
         name: name,
+        first_names: name,
         lastname: lastname,
+        last_names: lastname,
         phone: phone,
         dui: dui,
         address: address,
+        role: "customer",
+        is_active: true,
       },
     },
   });

@@ -70,8 +70,14 @@ export const CategoriesSection = ({ isLoading }) => {
                               </div>
                           ))
                         : categories.map((cat) => {
-                              const icon = cat.category_img;
-                              const iconHover = cat.category_img_hover;
+                              const icon = cat.category_img ?? cat.category_img_hover;
+                              const iconHover = cat.category_img_hover ?? cat.category_img;
+                              const fallbackLabel = String(
+                                  cat.category_name ?? "?",
+                              )
+                                  .trim()
+                                  .charAt(0)
+                                  .toUpperCase();
                               return (
                                   <button
                                       key={cat.category_id}
@@ -82,16 +88,24 @@ export const CategoriesSection = ({ isLoading }) => {
                                       className={cardClass}
                                   >
                                       <div>
-                                          <img
-                                              src={icon}
-                                              alt={cat.alt_text}
-                                              className="size-10 block group-hover:hidden"
-                                          />
-                                          <img
-                                              src={iconHover}
-                                              alt={`${cat.alt_text} hover`}
-                                              className="size-10 hidden group-hover:block"
-                                          />
+                                          {icon ? (
+                                              <>
+                                                  <img
+                                                      src={icon}
+                                                      alt={cat.alt_text}
+                                                      className="size-10 block group-hover:hidden"
+                                                  />
+                                                  <img
+                                                      src={iconHover}
+                                                      alt={`${cat.alt_text} hover`}
+                                                      className="size-10 hidden group-hover:block"
+                                                  />
+                                              </>
+                                          ) : (
+                                              <div className="grid size-10 place-items-center rounded-full bg-surface-2 text-sm font-semibold text-primary transition group-hover:bg-white/15 group-hover:text-white">
+                                                  {fallbackLabel || "?"}
+                                              </div>
+                                          )}
                                       </div>
                                       <span className="text-sm font-medium">
                                           {cat.category_name}
