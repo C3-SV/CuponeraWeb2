@@ -39,7 +39,7 @@ export const OrderSummary = () => {
         const confirm = await Swal.fire({
             title: "Confirmar pago",
             html: `
-        <div style="text-align:left">
+        <div style="text-align:center">
           <div style="margin-top:8px">Total: <b>$${total.toFixed(2)}</b></div>
         </div>
       `,
