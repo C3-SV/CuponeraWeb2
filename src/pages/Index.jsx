@@ -39,9 +39,9 @@ export const Index = () => {
             <HeroSection />
 
             <CategoriesSection isLoading={isLoading} />
-            <FeaturesSection />
             <EndingSoonSection isLoading={isLoading} />
             <BestSellingSection isLoading={isLoading} />
+            <FeaturesSection />
 
             <CtaSection />
         </div>

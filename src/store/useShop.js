@@ -638,7 +638,7 @@ export const useShopStore = create(
 
                 const { data: authData, error: authErr } = await supabase.auth.getUser();
                 const user = authData?.user;
-                if (authErr || !user) throw new Error("No autenticado");
+                if (authErr || !user) throw new Error("No autenticado. Iniciá sesión para completar la compra.");
 
                 // 1) Insert order
                 const now = new Date();

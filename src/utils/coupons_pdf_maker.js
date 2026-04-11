@@ -18,7 +18,7 @@ export async function coupons_pdf_maker(coupon) {
     const { data: authData, error: authErr } = await supabase.auth.getUser();
     const user = authData?.user;
     if (authErr || !user) {
-        throw new Error("No autenticado: no se puede generar el PDF.");
+        throw new Error("No autenticado. Iniciá sesión para continuar.");
     }
 
     let fullName = null;

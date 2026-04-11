@@ -5,8 +5,16 @@ import { useShopStore } from "../../store/useShop";
 export const OfferCard = ({ product }) => {
     const addToCart = useShopStore((state) => state.addToCart);
 
-    const { id, name, mainImage, price, regularPrice, discountPercent } =
-        product;
+    const {
+        id,
+        name,
+        mainImage,
+        price,
+        regularPrice,
+        discountPercent,
+        businessName,
+        companyPhoto,
+    } = product;
     const hasDiscount = regularPrice && regularPrice > price;
 
     const badge =
@@ -65,6 +73,31 @@ export const OfferCard = ({ product }) => {
                             </span>
                         )}
                     </div>
+
+                    {(businessName || companyPhoto) && (
+                        <div className="flex items-center justify-end gap-2 text-xs text-gray-500 pt-2 border-t border-gray-100">
+                            {companyPhoto && (
+                                <img
+                                    src={companyPhoto}
+                                    alt={businessName || "Compañía"}
+                                    className="h-6 w-auto max-w-20 object-contain rounded-sm"
+                                />
+                            )}
+
+                            {companyPhoto && businessName && (
+                                <span className="text-gray-300">|</span>
+                            )}
+
+                            {businessName && (
+                                <span className="truncate">
+                                    Ofrecido por{" "}
+                                    <span className="font-semibold text-gray-700">
+                                        {businessName}
+                                    </span>
+                                </span>
+                            )}
+                        </div>
+                    )}
                 </div>
             </Link>
         </article>
