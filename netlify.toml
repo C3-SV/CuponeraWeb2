@@ -6,6 +6,18 @@
 [build.environment]
   NODE_VERSION = "20"
 
+[[redirects]]
+  from   = "/api/pay"
+  to     = "/.netlify/functions/pay"
+  status = 200
+  force  = true
+
+[[redirects]]
+  from   = "/pay"
+  to     = "/.netlify/functions/pay"
+  status = 200
+  force  = true
+
 # SPA fallback: redirect all non-file/function requests to index.html
 [[redirects]]
   from   = "/*"

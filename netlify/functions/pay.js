@@ -1,8 +1,22 @@
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY)
+  : null;
 
 export const handler = async (event) => {
+  if (!stripe) {
+    return {
+      statusCode: 500,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ok: false,
+        status: "server_misconfigured",
+        error: "Missing STRIPE_SECRET_KEY",
+      }),
+    };
+  }
+
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
