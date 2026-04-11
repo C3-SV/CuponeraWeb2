@@ -40,8 +40,6 @@ export const OrderSummary = () => {
             title: "Confirmar pago",
             html: `
         <div style="text-align:left">
-          <div>Subtotal: <b>$${subtotal.toFixed(2)}</b></div>
-          <div>Comisión: <b>$${serviceFee.toFixed(2)}</b></div>
           <div style="margin-top:8px">Total: <b>$${total.toFixed(2)}</b></div>
         </div>
       `,
