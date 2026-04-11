@@ -70,55 +70,58 @@ export const useShopStore = create(
             loadOffers: async () => {
                 set({ productsLoading: true, productsError: null });
 
+                const todayStr = todayDateSupabaseFormat(); // Fecha de hoy
+
                 const { data, error } = await supabase
                     .from("offers")
                     .select(`
-      offer_id,
-      offer_title,
-      offer_description,
-      offer_regular_price,
-      offer_price,
-      offer_start_date,
-      offer_end_date,
-      coupon_usage_deadline,
-      coupon_quantity_limit,
-      offer_status,
-      company_id,
-      deleted_at,
+                      offer_id,
+                      offer_title,
+                      offer_description,
+                      offer_regular_price,
+                      offer_price,
+                      offer_start_date,
+                      offer_end_date,
+                      coupon_usage_deadline,
+                      coupon_quantity_limit,
+                      offer_status,
+                      company_id,
+                      deleted_at,
 
-      company:companies (
-        company_id,
-        company_name,
-        company_code,
-        company_photo,
-        company_commission_rate,
-        deleted_at,
-        category_id:categories (
-            category_id,
-            category_name,
-            category_img
-        )
-      ),
+                      company:companies (
+                        company_id,
+                        company_name,
+                        company_code,
+                        company_photo,
+                        company_commission_rate,
+                        deleted_at,
+                        category_id:categories (
+                            category_id,
+                            category_name,
+                            category_img
+                        )
+                      ),
 
-      offer_carousel_images (
-        offer_carousel_image_id,
-        image_url,
-        image_alt_text,
-        image_sort_order,
-        main_image,
-        deleted_at
-      ),
+                      offer_carousel_images (
+                        offer_carousel_image_id,
+                        image_url,
+                        image_alt_text,
+                        image_sort_order,
+                        main_image,
+                        deleted_at
+                      ),
 
-      offer_list_details (
-        offer_list_detail_id,
-        item_title,
-        item_description,
-        item_sort_order,
-        deleted_at
-      )
-    `)
+                      offer_list_details (
+                        offer_list_detail_id,
+                        item_title,
+                        item_description,
+                        item_sort_order,
+                        deleted_at
+                      )
+                    `)
                     .is("deleted_at", null)
                     .eq("offer_status", "APPROVED")
+                    .gte("offer_end_date", todayStr) // <-- FILTRO AÑADIDO
                     .order("created_at", { ascending: false });
 
                 if (error) {
@@ -238,16 +241,21 @@ export const useShopStore = create(
             loadBestSellers: async () => {
                 set({ productsLoading: true, productsError: null });
 
+                const todayStr = todayDateSupabaseFormat();
+
                 const { data, error } = await supabase
                     .from("top_vendidos_mes")
                     .select(`
-                offer_id, offer_title, offer_description, offer_regular_price, offer_price,
-                offer_start_date, offer_end_date, coupon_usage_deadline, coupon_quantity_limit,
-                offer_status, company_id, deleted_at, total_vendido,
-                company:companies ( company_id, company_name, company_photo, deleted_at, category_id:categories ( category_id, category_name, category_img ) ),
-                offer_carousel_images ( offer_carousel_image_id, image_url, image_alt_text, image_sort_order, main_image, deleted_at ),
-                offer_list_details ( offer_list_detail_id, item_title, item_description, item_sort_order, deleted_at )
-            `)
+                        offer_id, offer_title, offer_description, offer_regular_price, offer_price,
+                        offer_start_date, offer_end_date, coupon_usage_deadline, coupon_quantity_limit,
+                        offer_status, company_id, deleted_at, total_vendido,
+                        company:companies ( company_id, company_name, company_photo, deleted_at, category_id:categories ( category_id, category_name, category_img ) ),
+                        offer_carousel_images ( offer_carousel_image_id, image_url, image_alt_text, image_sort_order, main_image, deleted_at ),
+                        offer_list_details ( offer_list_detail_id, item_title, item_description, item_sort_order, deleted_at )
+                    `)
+                    .is("deleted_at", null)
+                    .eq("offer_status", "APPROVED")
+                    .gte("offer_end_date", todayStr)
                     .limit(12);
 
                 if (error) {
@@ -370,26 +378,29 @@ export const useShopStore = create(
             },
 
             getOfferById: async (offerId) => {
+                const todayStr = todayDateSupabaseFormat();
+
                 const { data, error } = await supabase
                     .from("offers")
                     .select(`
-                offer_id, offer_title, offer_description, offer_regular_price, offer_price,
-                offer_start_date, offer_end_date, coupon_usage_deadline, coupon_quantity_limit,
-                offer_status, company_id, deleted_at,
-                company:companies (
-                    company_id, company_name, company_photo, deleted_at,
-                    category_id:categories ( category_id, category_name )
-                ),
-                offer_carousel_images ( offer_carousel_image_id, image_url, image_alt_text, image_sort_order, main_image, deleted_at ),
-                offer_list_details ( offer_list_detail_id, item_title, item_description, item_sort_order, deleted_at )
-            `)
+                        offer_id, offer_title, offer_description, offer_regular_price, offer_price,
+                        offer_start_date, offer_end_date, coupon_usage_deadline, coupon_quantity_limit,
+                        offer_status, company_id, deleted_at,
+                        company:companies (
+                            company_id, company_name, company_photo, deleted_at,
+                            category_id:categories ( category_id, category_name )
+                        ),
+                        offer_carousel_images ( offer_carousel_image_id, image_url, image_alt_text, image_sort_order, main_image, deleted_at ),
+                        offer_list_details ( offer_list_detail_id, item_title, item_description, item_sort_order, deleted_at )
+                    `)
                     .eq("offer_id", offerId)
                     .is("deleted_at", null)
                     .eq("offer_status", "APPROVED")
+                    .gte("offer_end_date", todayStr)
                     .maybeSingle();
 
                 if (error || !data) {
-                    console.error("fetchOfferById:", error || "Oferta no encontrada o inactiva");
+                    console.error("fetchOfferById:", error || "Oferta no encontrada, inactiva o expirada");
                     return null;
                 }
 
@@ -914,7 +925,7 @@ export const useShopStore = create(
             },
         }),
         {
-            name: "lc_shop_store", 
+            name: "lc_shop_store",
             storage: createJSONStorage(() => localStorage),
 
             // guardar carrito
