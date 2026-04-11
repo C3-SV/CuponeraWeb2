@@ -273,6 +273,10 @@ export const useShopStore = create(
                         sortOrder: img.image_sort_order,
                     }));
                     const mainImage = images.find((img) => img.isMain)?.url ?? images[0]?.url ?? null;
+                    const companyPhoto = toStorageUrl(
+                        row.company?.company_photo ?? null,
+                        COMPANY_LOGOS_BUCKET
+                    );
 
                     return {
                         id: row.offer_id,
@@ -288,7 +292,7 @@ export const useShopStore = create(
                         status: row.offer_status,
                         companyId: row.company_id,
                         businessName: row.company?.deleted_at ? "—" : (row.company?.company_name ?? "—"),
-                        companyPhoto: row.company?.company_photo ?? null,
+                        companyPhoto,
                         images,
                         mainImage,
                         salesCount: row.total_vendido
@@ -341,6 +345,10 @@ export const useShopStore = create(
                     const mainImage = images.find((img) => img.isMain)?.url ?? images[0]?.url ?? null;
                     const validUntil = row.coupon_usage_deadline ?? row.offer_end_date ?? null;
                     const businessName = row.company?.deleted_at ? "—" : (row.company?.company_name ?? "—");
+                    const companyPhoto = toStorageUrl(
+                        row.company?.company_photo ?? null,
+                        COMPANY_LOGOS_BUCKET
+                    );
 
                     return {
                         id: row.offer_id,
@@ -356,7 +364,7 @@ export const useShopStore = create(
                         status: row.offer_status,
                         companyId: row.company_id,
                         businessName,
-                        companyPhoto: row.company?.company_photo ?? null,
+                        companyPhoto,
                         images,
                         mainImage
                     };
